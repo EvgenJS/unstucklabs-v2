@@ -11,7 +11,9 @@ a visible diff to this file in the same PR, not silent scope creep.
 - [x] CLAUDE.md committed
 - [x] .claude/settings.json committed (team-shared, distinct from settings.local.json)
 - [ ] Shared tsconfig/eslint/prettier presets in packages/config
-- [ ] GitHub branch protection on main (require PR, no direct pushes) — manual, via GitHub UI/gh
+- [x] GitHub branch protection on main (require PR; repo made public since classic
+      branch protection needs GitHub Pro on private repos; `enforce_admins` left
+      off so the owner isn't locked out solo)
 - [ ] CI skeleton (GitHub Actions: install/build/typecheck) — can be minimal/no-op initially
 - [ ] Local Postgres running for dev
 
@@ -108,3 +110,5 @@ Not started until Phase 3 is done and stable.
   sections, no visitor password, Contact Us / About Us / Legal pages, and
   merchant profile "Confirmed" status — all required before filing the API
   access ticket, not before.
+- 2026-07-05 — Repo made public and branch protection enabled on main (classic
+  branch protection is a paid-plan-only feature for private repos on GitHub).
