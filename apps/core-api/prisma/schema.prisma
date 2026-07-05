@@ -1,0 +1,127 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  OWNER
+  EDITOR
+  SUPPORT
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  CANCELED
+  PAST_DUE
+  EXPIRED
+  TRIALING
+}
+
+enum PricingModel {
+  ONE_TIME
+  RECURRING
+  FREEMIUM
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+  lastSeenAt   DateTime @default(now())
+
+  // Admin RBAC: absence of a Membership row means "not an admin user".
+  memberships   Membership[]
+  subscriptions Subscription[]
+  appUserData   AppUserData[]
+
+  @@map("users")
+}
+
+// Grants a User a role in the internal admin panel. Modeled as its own table
+// (not a `role` column on User) so it can extend to per-resource scoping
+// later without a migration that touches the core User table.
+model Membership {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      Role
+  createdAt DateTime @default(now())
+
+  @@unique([userId, role])
+  @@map("memberships")
+}
+
+// Registry of sellable mini-apps.
+model Product {
+  id           String       @id @default(cuid())
+  slug         String       @unique
+  name         String
+  subdomain    String?      @unique
+  description  String?
+  pricingModel PricingModel
+  priceCents   Int
+  currency     String       @default("USD")
+  isActive     Boolean      @default(true)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  subscriptions Subscription[]
+
+  @@map("products")
+}
+
+// One row per user-product purchase/subscription relationship. Always scoped
+// to a single Product -- no "bundle"/all-access concept, per the confirmed
+// per-app selling model.
+model Subscription {
+  id                      String              @id @default(cuid())
+  userId                  String
+  user                    User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId               String
+  product                 Product             @relation(fields: [productId], references: [id], onDelete: Restrict)
+  status                  SubscriptionStatus
+  provider                String // e.g. "westernbid" -- free text, no enum lock-in while adapter is undefined
+  providerCustomerId      String?
+  providerSubscriptionId  String?
+  providerTransactionId   String?
+  currentPeriodEnd        DateTime? // null for one-time purchases
+  createdAt               DateTime            @default(now())
+  updatedAt               DateTime            @updatedAt
+
+  @@unique([userId, productId])
+  @@index([providerSubscriptionId])
+  @@map("subscriptions")
+}
+
+// Waitlist + newsletter capture. Deliberately separate from User -- most
+// waitlist signups will never become full accounts.
+model EmailSubscriber {
+  id             String    @id @default(cuid())
+  email          String    @unique
+  source         String? // e.g. "waitlist:unstuck-daily", "newsletter:store"
+  subscribedAt   DateTime  @default(now())
+  unsubscribedAt DateTime?
+
+  @@map("email_subscribers")
+}
+
+// Generic per-mini-app user data blob. Each mini-app owns the shape of its
+// own `data` JSON; core-api only enforces ownership and which product it
+// belongs to, not the internal structure.
+model AppUserData {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId String
+  data      Json
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+
+  @@unique([userId, productId])
+  @@map("app_user_data")
+}

@@ -78,6 +78,17 @@ pnpm db:seed                # seed local dev data
 pnpm typecheck              # typecheck all workspaces
 ```
 
+## Local Postgres
+
+No Docker on the primary dev machine. Postgres runs via Homebrew instead:
+
+```bash
+brew services start postgresql@16          # starts as a background service
+psql -U unstucklabs -d unstucklabs_dev -h localhost
+```
+
+Dev database `unstucklabs_dev` and role `unstucklabs` already exist locally with password `unstucklabs_dev` (see `apps/core-api/.env.example` for the full `DATABASE_URL`). `psql`/`pg_ctl` live at `/usr/local/opt/postgresql@16/bin` (added to PATH via `.zshrc`).
+
 ## Deployment model
 
 Self-hosted on the user's own server — not Vercel or any serverless platform. Nginx + Let's Encrypt handle TLS and subdomain routing; PM2 manages the Store/Admin/core-api Node processes. Mini-apps are static Vite builds served directly by Nginx. Don't write code that assumes serverless function timeouts, edge runtimes, or platform-specific deploy hooks.

@@ -21,13 +21,15 @@ Deferred: CD/deploy automation, Nginx/PM2 config (own infra phase later).
 
 ## Phase 1 — core-api Foundation
 
-- [ ] Fastify app skeleton, health check route
-- [ ] Prisma schema v1 (User, Membership, Product, Subscription, EmailSubscriber, AppUserData)
-- [ ] Postgres migration applied locally
-- [ ] Auth module: register/login/refresh/logout, JWT access+refresh, httpOnly cookie scoped to `.unstucklabs.com`
-- [ ] PaymentProvider interface + NullPaymentProvider stub for local dev
-- [ ] Email module: Resend client wrapper, waitlist capture endpoint writing to EmailSubscriber
-- [ ] Seed script: at least one product/app row, one admin user
+- [x] Fastify app skeleton, health check route
+- [x] Prisma schema v1 (User, Membership, Product, Subscription, EmailSubscriber, AppUserData)
+- [x] Postgres migration applied locally (PostgreSQL 16 via Homebrew, db `unstucklabs_dev`)
+- [x] Auth module: register/login/refresh/logout, JWT access+refresh, httpOnly cookie scoped to `.unstucklabs.com`
+- [x] PaymentProvider interface + NullPaymentProvider stub for local dev
+- [x] Email module: Resend client wrapper, waitlist capture endpoint writing to EmailSubscriber
+- [x] Seed script: at least one product/app row, one admin user
+- [x] Products + Subscriptions modules (public catalog, admin CRUD, RBAC-gated)
+- [x] Admin RBAC plugin (`requireRole`, composable preHandler)
 
 Deferred: real WesternBid adapter (blocked on API access — see External Dependencies),
 refresh-token rotation edge cases beyond basic reuse detection, rate limiting beyond
@@ -112,3 +114,8 @@ Not started until Phase 3 is done and stable.
   access ticket, not before.
 - 2026-07-05 — Repo made public and branch protection enabled on main (classic
   branch protection is a paid-plan-only feature for private repos on GitHub).
+- 2026-07-05 — Phase 1 (core-api foundation) implemented and verified end to
+  end locally: health check, Prisma migration, auth register/login/refresh/me,
+  RBAC-gated admin routes, waitlist capture, checkout stub, and the null-provider
+  webhook flow updating a Subscription. Local Postgres via Homebrew
+  (`postgresql@16`, db `unstucklabs_dev`) since Docker wasn't available.
