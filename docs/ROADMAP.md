@@ -45,6 +45,33 @@ a basic plugin, RBAC enforcement logic (lands in Phase 3).
 Deferred: per-mini-app distinct palettes (part of each mini-app's own Phase 4+ work),
 real payment completion (depends on WesternBid credentials).
 
+### Phase 2b — WesternBid application readiness (gates filing the WesternBid ticket)
+
+WesternBid requires the store to look and function like a real, live business
+*before* they'll even review a payment-processing application — the ticket is
+filed only once every item below is true, not before. None of this blocks
+Phase 1/3/4 work, only the moment we submit the WesternBid application.
+
+- [ ] Real products listed in the catalog (the mini-apps we actually intend to
+      sell — "coming soon" status is fine, but no lorem-ipsum/placeholder products)
+- [ ] No empty sections or template/placeholder content anywhere on the public site
+- [ ] Any visitor password gate / staging lock removed — site is genuinely public
+- [ ] Shipping/delivery method configured (digital delivery — describe how access
+      is granted post-purchase, since there's no physical shipping)
+- [ ] Contact Us page with at least two contact methods (e.g. support email + a
+      contact form, or email + social)
+- [ ] About Us page: the idea/motivation behind UnstuckLabs, the business model,
+      and a named responsible person
+- [ ] Legal/Policy pages published: Shipping Policy (digital delivery variant),
+      Refund Policy, User Agreement / Terms of Service, Privacy Policy
+- [ ] Western Bid merchant profile itself reaches "Confirmed" status (separate
+      from the storefront checklist — user-side account step)
+
+Content for About Us / Contact Us / Legal pages needs real input from the user
+(business/legal entity status, policy specifics, named responsible person,
+contact channels) — flag this explicitly when Phase 2 implementation starts
+rather than inventing placeholder legal text.
+
 ## Phase 3 — Admin MVP
 
 - [ ] Next.js admin app shell, protected by role check (OWNER/EDITOR/SUPPORT)
@@ -67,10 +94,17 @@ Not started until Phase 3 is done and stable.
 ## External Blocking Dependencies
 
 - **WesternBid API access**: requires opening a support ticket to obtain an API key;
-  webhook/checkout API shape is undocumented publicly. File this ticket immediately —
-  it gates real checkout testing in Phase 2 only, and does not block Phase 0/1/3 work,
-  which can proceed against the stub PaymentProvider.
+  webhook/checkout API shape is undocumented publicly. Per WesternBid's own process,
+  the ticket is filed only after the Phase 2b readiness checklist is fully checked
+  off (they review the live storefront before issuing API access) — do not file it
+  earlier. This does not block Phase 0/1/3/4 work, which can proceed against the
+  stub PaymentProvider indefinitely.
 
 ## Change Log
 
 - 2026-07-05 — Initial roadmap drafted and committed as part of Phase 0 scaffold.
+- 2026-07-05 — Added Phase 2b (WesternBid application readiness checklist) per
+  WesternBid's stated requirements: real catalog content, no empty/template
+  sections, no visitor password, Contact Us / About Us / Legal pages, and
+  merchant profile "Confirmed" status — all required before filing the API
+  access ticket, not before.
