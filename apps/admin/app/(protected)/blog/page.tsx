@@ -6,6 +6,7 @@ import type { BlogPost, BlogPostInput } from "@unstucklabs/sdk";
 import { useAuth } from "../../../lib/auth-context";
 import { getApiClient } from "../../../lib/api";
 import { BlogPostForm } from "../../../components/BlogPostForm";
+import { BlogCoverManager } from "../../../components/BlogCoverManager";
 
 export default function BlogPage() {
   const { accessToken, user } = useAuth();
@@ -23,6 +24,13 @@ export default function BlogPage() {
     try {
       const { posts } = await getApiClient(accessToken).blog.admin.list();
       setPosts(posts);
+      // Keep `editing` in sync (e.g. after a cover upload/delete) so the
+      // preview re-renders with fresh data instead of the stale snapshot
+      // captured when "Edit" was first clicked.
+      setEditing((current) => {
+        if (!current || current === "new") return current;
+        return posts.find((p) => p.id === current.id) ?? current;
+      });
     } catch {
       // Blog admin routes have no SUPPORT read access -- the Sidebar hides
       // this link for SUPPORT-only users, but handle a direct link too.
@@ -37,8 +45,11 @@ export default function BlogPage() {
 
   async function handleCreate(input: BlogPostInput) {
     if (!accessToken) return;
-    await getApiClient(accessToken).blog.admin.create(input);
-    setEditing(null);
+    const { post } = await getApiClient(accessToken).blog.admin.create(input);
+    // Switch straight to editing the new post (rather than closing the form)
+    // so the cover image section appears immediately -- uploads need a real
+    // postId to attach to.
+    setEditing(post);
     await refresh();
   }
 
@@ -88,12 +99,13 @@ export default function BlogPage() {
         </div>
       )}
       {editing && editing !== "new" && (
-        <div className="mt-6">
+        <div className="mt-6 space-y-6">
           <BlogPostForm
             initial={editing}
             onSubmit={(input) => handleUpdate(editing.id, input)}
             onCancel={() => setEditing(null)}
           />
+          <BlogCoverManager postId={editing.id} coverImageUrl={editing.coverImageUrl} onChange={refresh} />
         </div>
       )}
 

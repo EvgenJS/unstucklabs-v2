@@ -241,3 +241,18 @@ Not started until Phase 3 is done and stable.
   "already used" message when a cap isn't yet hit, expired codes rejected).
   Checkout now takes an optional promo code, always re-validated
   server-side.
+- 2026-07-06 — Store landing page Hero given a full-bleed background photo
+  (AI-generated via the Higgsfield MCP integration) with a gradient scrim,
+  tuned for mobile text contrast (verified 9-11:1 against white text).
+  Also fixed a pre-existing bug found during mobile verification: the
+  header nav overflowed horizontally at narrow viewports, clipping "My
+  account" — it now collapses into a hamburger menu below the `sm`
+  breakpoint.
+- 2026-07-06 — Added cover image upload for blog posts, closing a gap where
+  `BlogPost.coverImageUrl` existed in the schema/API but had no upload path
+  and wasn't rendered anywhere but Open Graph/Twitter meta tags. Reused the
+  Phase 3.5 local-disk storage module (generalized `saveUploadedFile` to
+  take a `category` param instead of being product-only), added
+  `POST`/`DELETE /admin/blog/posts/:id/cover` routes, an admin
+  `BlogCoverManager` upload widget (mirrors `ProductMediaManager`), and
+  cover image rendering on both the Store's blog list and post pages.

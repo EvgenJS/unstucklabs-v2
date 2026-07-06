@@ -35,7 +35,7 @@ export async function productMediaAdminRoutes(fastify: FastifyInstance) {
         return reply.code(400).send({ error: `File too large (max ${Math.round(maxBytes / 1024 / 1024)}MB)` });
       }
 
-      const { url } = await saveUploadedFile(buffer, data.filename, productId);
+      const { url } = await saveUploadedFile(buffer, data.filename, "products", productId);
 
       const lastMedia = await instance.prisma.productMedia.findFirst({
         where: { productId },

@@ -16,16 +16,17 @@ function sanitizeFilename(name: string): string {
 export async function saveUploadedFile(
   buffer: Buffer,
   originalFilename: string,
-  productId: string
+  category: "products" | "blog",
+  entityId: string
 ): Promise<{ url: string; absolutePath: string }> {
-  const dir = path.join(UPLOAD_DIR, "products", productId);
+  const dir = path.join(UPLOAD_DIR, category, entityId);
   await mkdir(dir, { recursive: true });
 
   const filename = `${randomUUID()}-${sanitizeFilename(originalFilename)}`;
   const absolutePath = path.join(dir, filename);
   await writeFile(absolutePath, buffer);
 
-  return { url: `/uploads/products/${productId}/${filename}`, absolutePath };
+  return { url: `/uploads/${category}/${entityId}/${filename}`, absolutePath };
 }
 
 export async function deleteUploadedFile(url: string): Promise<void> {
