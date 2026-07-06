@@ -99,11 +99,21 @@ social link once one exists. Everything else on this checklist is done.
 
 ## Phase 3 — Admin MVP
 
-- [ ] Next.js admin app shell, protected by role check (OWNER/EDITOR/SUPPORT)
-- [ ] Manage Products/Apps (CRUD: name, subdomain, pricing metadata, active flag)
-- [ ] Manage Users (list, view subscriptions, manually grant/revoke role)
-- [ ] Manage Subscriptions (view/filter by user/product/status, manual override for support cases)
-- [ ] Role-based route/action gating enforced server-side in core-api, not just hidden in UI
+- [x] Next.js admin app shell, protected by role check (OWNER/EDITOR/SUPPORT)
+- [x] Manage Products/Apps (CRUD: name, subdomain, pricing metadata, active flag) —
+      OWNER/EDITOR only, no SUPPORT read access (business/pricing concern)
+- [x] Manage Users (list, view subscriptions, manually grant/revoke role) — new
+      core-api `users` admin module; list/detail viewable by OWNER/EDITOR/SUPPORT,
+      grant/revoke restricted to OWNER only (more sensitive than a CRUD edit)
+- [x] Manage Subscriptions (view/filter by user/product/status, manual override for support cases)
+- [x] Manage Blog posts (CRUD, publish/unpublish) — completes the Phase 2
+      pulled-forward blog admin routes; OWNER/EDITOR only, same as Products
+- [x] View App Requests + Contact Messages (read-only, OWNER/EDITOR/SUPPORT)
+- [x] Role-based route/action gating enforced server-side in core-api, not just
+      hidden in UI — UI also hides actions/nav items a role can't use (verified
+      by logging in as a real SUPPORT-role user in the browser: Products/Blog
+      nav items correctly absent, Users has no grant/revoke buttons, Subscriptions
+      has no status override, all matching what core-api actually allows)
 
 Deferred: audit log UI, bulk operations, analytics dashboards.
 
@@ -169,3 +179,13 @@ Not started until Phase 3 is done and stable.
   `/auth/refresh`, `/auth/logout`), which made Fastify's JSON body parser choke
   on an empty body and return 400 — silently logging users out on any full
   page reload. Now only sets the header when a body is actually present.
+- 2026-07-06 — Phase 3 (Admin MVP) implemented and verified end to end in the
+  browser: Products/Blog CRUD, Users (list + OWNER-only role grant/revoke via
+  a new core-api `users` admin module), Subscriptions (filter + status
+  override), and read-only App Requests/Contact Messages. Verified RBAC by
+  actually logging in as a real SUPPORT-role user in the browser (not just
+  reasoning about it) — found and fixed a real gap where the Products and Blog
+  nav items weren't hidden for SUPPORT even though those admin routes are
+  OWNER/EDITOR-only in core-api, which left SUPPORT users stuck on an infinite
+  "Loading…" screen; now the Sidebar hides those links and the pages fall back
+  to a clear "you don't have access" message if reached directly.
