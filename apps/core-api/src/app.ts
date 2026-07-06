@@ -13,6 +13,10 @@ import { subscriptionsAdminRoutes } from "./modules/subscriptions/subscriptions.
 import { paymentsRoutes } from "./modules/payments/payments.routes.js";
 import { webhooksRoutes } from "./modules/payments/webhooks.routes.js";
 import { waitlistRoutes } from "./modules/email/waitlist.routes.js";
+import { blogRoutes } from "./modules/blog/blog.routes.js";
+import { blogAdminRoutes } from "./modules/blog/blog.admin.routes.js";
+import { appRequestsRoutes } from "./modules/app-requests/app-requests.routes.js";
+import { contactRoutes } from "./modules/contact/contact.routes.js";
 
 export async function buildApp(): Promise<FastifyInstance> {
   const app = Fastify({ logger: true });
@@ -38,6 +42,10 @@ export async function buildApp(): Promise<FastifyInstance> {
   await app.register(paymentsRoutes);
   await app.register(webhooksRoutes);
   await app.register(waitlistRoutes);
+  await app.register(blogRoutes);
+  await app.register(blogAdminRoutes);
+  await app.register(appRequestsRoutes);
+  await app.register(contactRoutes);
 
   return app;
 }

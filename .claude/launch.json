@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "core-api",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "core-api", "dev"],
+      "port": 3001
+    },
+    {
+      "name": "store",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "store", "dev"],
+      "port": 3000
+    }
+  ]
+}

@@ -10,12 +10,12 @@ a visible diff to this file in the same PR, not silent scope creep.
 - [x] pnpm workspace + Turborepo scaffold committed
 - [x] CLAUDE.md committed
 - [x] .claude/settings.json committed (team-shared, distinct from settings.local.json)
-- [ ] Shared tsconfig/eslint/prettier presets in packages/config
+- [x] Shared tsconfig/eslint/prettier presets in packages/config (`@unstucklabs/config`)
 - [x] GitHub branch protection on main (require PR; repo made public since classic
       branch protection needs GitHub Pro on private repos; `enforce_admins` left
       off so the owner isn't locked out solo)
-- [ ] CI skeleton (GitHub Actions: install/build/typecheck) — can be minimal/no-op initially
-- [ ] Local Postgres running for dev
+- [x] CI skeleton (GitHub Actions: install/typecheck/build, `.github/workflows/ci.yml`)
+- [x] Local Postgres running for dev (PostgreSQL 16 via Homebrew, db `unstucklabs_dev`)
 
 Deferred: CD/deploy automation, Nginx/PM2 config (own infra phase later).
 
@@ -37,17 +37,27 @@ a basic plugin, RBAC enforcement logic (lands in Phase 3).
 
 ## Phase 2 — Store MVP
 
-- [ ] Next.js app shell, shared layout using packages/ui tokens
-- [ ] App catalog page rendering Product rows from core-api (via packages/sdk)
-- [ ] Per-app pricing page
-- [ ] Auth pages (login/register) hitting core-api
-- [ ] Authenticated account area: "my subscriptions" list + "launch app" link to the mini-app subdomain
-- [ ] Checkout flow wired to PaymentProvider interface (stub provider acceptable until WesternBid ticket resolves)
-- [ ] Pre-launch waitlist capture form on the marketing/landing page
-- [ ] Brand-level design tokens generated via the ui-ux-pro-max skill
+- [x] Next.js app shell, shared layout using packages/ui tokens
+- [x] Distinct landing/home page (`/`) with persuasive copy — separate from the catalog
+- [x] App catalog page (`/apps`) rendering Product rows from core-api (via packages/sdk)
+- [x] Per-app pricing page (`/apps/[slug]`)
+- [x] Blog for SEO: `BlogPost` Prisma model + core-api `blog` module (public list/detail
+      + admin CRUD pulled forward from Phase 3), `/blog` + `/blog/[slug]` pages,
+      `sitemap.ts`, `robots.ts`, RSS feed, per-post OG/Twitter metadata
+- [x] FAQ page (`/faq`) — objection-handling + long-tail SEO
+- [x] "Help shape what we build next" co-creation section on the landing page +
+      lightweight `AppRequest` capture (email + free-text idea) — NOT the full
+      AI-quiz/confirmation pipeline, see Future/Backlog below
+- [x] Auth pages (login/register) hitting core-api
+- [x] Authenticated account area: "my subscriptions" list + "launch app" link to the mini-app subdomain
+- [x] Checkout flow wired to PaymentProvider interface (stub provider acceptable until WesternBid ticket resolves)
+- [x] Pre-launch waitlist capture form on the landing page (hero + footer)
+- [x] Brand-level design tokens generated via the ui-ux-pro-max skill (teal/orange,
+      Plus Jakarta Sans — see packages/ui/design-system/unstucklabs/MASTER.md)
 
 Deferred: per-mini-app distinct palettes (part of each mini-app's own Phase 4+ work),
-real payment completion (depends on WesternBid credentials).
+real payment completion (depends on WesternBid credentials), blog categories/tags
+(until ~8-10 posts exist), rich-text blog editor (Phase 3 admin UI work).
 
 ### Phase 2b — WesternBid application readiness (gates filing the WesternBid ticket)
 
@@ -56,25 +66,36 @@ WesternBid requires the store to look and function like a real, live business
 filed only once every item below is true, not before. None of this blocks
 Phase 1/3/4 work, only the moment we submit the WesternBid application.
 
-- [ ] Real products listed in the catalog (the mini-apps we actually intend to
+- [x] Real products listed in the catalog (the mini-apps we actually intend to
       sell — "coming soon" status is fine, but no lorem-ipsum/placeholder products)
+      — Unstuck Daily is seeded; more products land as Phase 4+ apps are built
 - [ ] No empty sections or template/placeholder content anywhere on the public site
+      — **not yet true**: the About page intentionally has no named responsible
+      person yet (user asked for a placeholder there for now, see below)
 - [ ] Any visitor password gate / staging lock removed — site is genuinely public
-- [ ] Shipping/delivery method configured (digital delivery — describe how access
-      is granted post-purchase, since there's no physical shipping)
-- [ ] Contact Us page with at least two contact methods (e.g. support email + a
-      contact form, or email + social)
-- [ ] About Us page: the idea/motivation behind UnstuckLabs, the business model,
-      and a named responsible person
-- [ ] Legal/Policy pages published: Shipping Policy (digital delivery variant),
-      Refund Policy, User Agreement / Terms of Service, Privacy Policy
+      (n/a until deployed; nothing gates it locally)
+- [x] Shipping/delivery method configured (digital delivery — `/legal/shipping-policy`
+      describes instant access via account + confirmation email)
+- [x] Contact Us page with at least two contact methods — email (`hello@unstucklabs.com`)
+      + working contact form (`/contact`, posts to `POST /contact`, admin-readable via
+      `GET /admin/contact-messages`). Telegram/social was requested but no handle
+      exists yet — add once there's a real one; email + form already satisfy
+      WesternBid's stated minimum of two methods.
+- [ ] About Us page: idea/motivation/business model written (`/about`), but the
+      **named responsible person is a placeholder** — user explicitly asked to defer
+      this and write it later. Must be filled in with a real name before filing
+      the WesternBid application.
+- [x] Legal/Policy pages published: `/legal/shipping-policy`, `/legal/refund-policy`,
+      `/legal/terms`, `/legal/privacy` — written to accurately reflect that
+      UnstuckLabs is currently operated by an individual (not a registered legal
+      entity) in Ukraine, per the user's confirmed business status. Not
+      placeholder/lorem-ipsum text, but not lawyer-reviewed either.
 - [ ] Western Bid merchant profile itself reaches "Confirmed" status (separate
-      from the storefront checklist — user-side account step)
+      from the storefront checklist — user-side account step, not started)
 
-Content for About Us / Contact Us / Legal pages needs real input from the user
-(business/legal entity status, policy specifics, named responsible person,
-contact channels) — flag this explicitly when Phase 2 implementation starts
-rather than inventing placeholder legal text.
+Before filing the WesternBid application: (1) add a real name to `/about`,
+(2) reach "Confirmed" merchant profile status, (3) optionally add a Telegram/
+social link once one exists. Everything else on this checklist is done.
 
 ## Phase 3 — Admin MVP
 
@@ -104,6 +125,20 @@ Not started until Phase 3 is done and stable.
   earlier. This does not block Phase 0/1/3/4 work, which can proceed against the
   stub PaymentProvider indefinitely.
 
+## Future / Backlog (not scheduled)
+
+- **AI-quiz-based app co-creation flow**: user describes what they need via a
+  short quiz, an AI confirms/refines the idea back to them, they submit a
+  build request. Early participants get free access to the resulting app once
+  built — grantable today via the existing admin subscription override
+  endpoint (`PATCH /admin/subscriptions/:id`), no new mechanism needed for
+  that part. Phase 2 only ships the lightweight version of this (an
+  `AppRequest` capture: email + free-text description, no quiz, no AI
+  confirmation step) so the landing page's "help shape what we build next"
+  messaging has a real destination instead of a dead-end CTA. The full
+  quiz/confirmation mechanic is deferred past Phase 4 — revisit once there's
+  real submission volume to justify building it.
+
 ## Change Log
 
 - 2026-07-05 — Initial roadmap drafted and committed as part of Phase 0 scaffold.
@@ -119,3 +154,18 @@ Not started until Phase 3 is done and stable.
   RBAC-gated admin routes, waitlist capture, checkout stub, and the null-provider
   webhook flow updating a Subscription. Local Postgres via Homebrew
   (`postgresql@16`, db `unstucklabs_dev`) since Docker wasn't available.
+- 2026-07-06 — Phase 2 (Store MVP) implemented and verified end to end in the
+  browser: full landing page (hero, pain points, value props, how-it-works,
+  live catalog teaser, co-creation capture, waitlist), catalog + per-app pricing
+  pages, blog with SEO (sitemap/robots/RSS/OG tags), FAQ, About, Contact
+  (backed by a new `ContactMessage` model + core-api module), and all four
+  legal pages. Full register → login → session-persists-reload → checkout →
+  logout cycle verified via browser automation, plus a real bug found and
+  fixed along the way (see below). Also added `packages/sdk` (typed core-api
+  client) and `packages/ui` design tokens (teal/orange, Plus Jakarta Sans, via
+  ui-ux-pro-max) as part of this phase.
+- 2026-07-06 — Fixed a bug in `packages/sdk`'s `apiRequest`: it always set
+  `Content-Type: application/json` even on bodyless requests (e.g.
+  `/auth/refresh`, `/auth/logout`), which made Fastify's JSON body parser choke
+  on an empty body and return 400 — silently logging users out on any full
+  page reload. Now only sets the header when a body is actually present.

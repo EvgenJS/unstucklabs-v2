@@ -1,0 +1,35 @@
+/*
+ * Brand-level design tokens, generated via the ui-ux-pro-max skill
+ * (see packages/ui/design-system/unstucklabs/MASTER.md for the full rationale
+ * and component-spec reference). Tailwind v4 picks these up automatically
+ * through the `@theme` block -- e.g. `--color-primary` becomes `bg-primary`,
+ * `text-primary`, `border-primary`, etc. Per-mini-app palette overrides
+ * layer on top of this file later (Phase 4+), they don't replace it.
+ *
+ * Default Tailwind spacing/shadow/radius scales already match the generated
+ * design system's spacing (4/8/16/24/32/48/64px) and radius (8/12/16px)
+ * values closely enough that no custom tokens are needed for those --
+ * use Tailwind's standard p-*, gap-*, rounded-lg/xl/2xl, shadow-sm/md/lg/xl
+ * utilities directly.
+ *
+ * The Google Fonts @import lives in each consuming app's globals.css (as the
+ * very first line, before `@import "tailwindcss"`) rather than here -- CSS
+ * requires @import to precede all other rules once everything gets
+ * concatenated, and an @import inside this file would end up after
+ * Tailwind's own generated rules once bundled. See apps/store/app/globals.css.
+ */
+
+@theme {
+  --color-primary: #0d9488;
+  --color-on-primary: #ffffff;
+  --color-secondary: #14b8a6;
+  --color-accent: #ea580c;
+  --color-background: #f0fdfa;
+  --color-foreground: #134e4a;
+  --color-muted: #e8f1f4;
+  --color-border: #99f6e4;
+  --color-destructive: #dc2626;
+  --color-ring: #0d9488;
+
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+}

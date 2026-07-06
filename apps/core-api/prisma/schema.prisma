@@ -27,6 +27,11 @@ enum PricingModel {
   FREEMIUM
 }
 
+enum BlogPostStatus {
+  DRAFT
+  PUBLISHED
+}
+
 model User {
   id           String   @id @default(cuid())
   email        String   @unique
@@ -108,6 +113,55 @@ model EmailSubscriber {
   unsubscribedAt DateTime?
 
   @@map("email_subscribers")
+}
+
+// Authored/edited via the Admin panel in Phase 3 -- never hardcoded in the
+// Store app. Phase 2 only needs the schema plus a couple of seeded posts to
+// exercise the public read routes. `content` is markdown, not a rich JSON
+// doc -- no editor exists yet, so a structured format would be guessing at a
+// shape nothing has designed for; migrating markdown -> blocks later is a
+// one-time scriptable transform if Phase 3 picks a block editor.
+model BlogPost {
+  id             String         @id @default(cuid())
+  slug           String         @unique
+  title          String
+  excerpt        String
+  content        String
+  coverImageUrl  String?
+  status         BlogPostStatus @default(DRAFT)
+  publishedAt    DateTime?
+  seoTitle       String?
+  seoDescription String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  @@map("blog_posts")
+}
+
+// Lightweight capture for the landing page's "help shape what we build next"
+// section -- intentionally NOT the full AI-quiz/confirmation pipeline (see
+// docs/ROADMAP.md Future/Backlog), just email + free-text idea so there's a
+// real destination for submissions instead of a dead-end CTA. No status
+// workflow yet -- add triage states only once there's real volume to triage.
+model AppRequest {
+  id          String   @id @default(cuid())
+  email       String
+  description String
+  createdAt   DateTime @default(now())
+
+  @@map("app_requests")
+}
+
+// General support/contact inquiries from the /contact page. Separate from
+// AppRequest (product ideas) and EmailSubscriber (marketing opt-in) since
+// the intent is different -- someone reaching out for help or a question.
+model ContactMessage {
+  id        String   @id @default(cuid())
+  email     String
+  message   String
+  createdAt DateTime @default(now())
+
+  @@map("contact_messages")
 }
 
 // Generic per-mini-app user data blob. Each mini-app owns the shape of its
