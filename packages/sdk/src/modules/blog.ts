@@ -1,4 +1,4 @@
-import { apiRequest, type ApiClientConfig } from "../client";
+import { apiRequest, apiUpload, type ApiClientConfig } from "../client";
 import type { BlogPost, BlogPostSummary } from "../types";
 
 export interface BlogPostInput {
@@ -50,6 +50,14 @@ export function createBlogModule(config: ApiClientConfig) {
 
       remove(id: string) {
         return apiRequest<void>(config, `/admin/blog/posts/${id}`, { method: "DELETE" });
+      },
+
+      uploadCover(id: string, file: File) {
+        return apiUpload<{ post: BlogPost }>(config, `/admin/blog/posts/${id}/cover`, file);
+      },
+
+      deleteCover(id: string) {
+        return apiRequest<{ post: BlogPost }>(config, `/admin/blog/posts/${id}/cover`, { method: "DELETE" });
       },
     },
   };

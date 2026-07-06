@@ -1,5 +1,9 @@
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
+import { saveUploadedFile, deleteUploadedFile } from "../../lib/storage.js";
+
+const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const MAX_IMAGE_BYTES = 10 * 1024 * 1024; // 10MB
 
 const createPostSchema = z.object({
   slug: z.string().min(1),
@@ -54,6 +58,56 @@ export async function blogAdminRoutes(fastify: FastifyInstance) {
       const { id } = request.params as { id: string };
       await instance.prisma.blogPost.delete({ where: { id } });
       return reply.code(204).send();
+    });
+
+    instance.post("/admin/blog/posts/:id/cover", async (request, reply) => {
+      const { id } = request.params as { id: string };
+
+      const post = await instance.prisma.blogPost.findUnique({ where: { id } });
+      if (!post) return reply.code(404).send({ error: "Post not found" });
+
+      const data = await request.file();
+      if (!data) return reply.code(400).send({ error: "No file uploaded" });
+
+      if (!ALLOWED_IMAGE_TYPES.includes(data.mimetype)) {
+        return reply.code(400).send({ error: "Unsupported file type" });
+      }
+
+      const buffer = await data.toBuffer();
+      if (buffer.byteLength > MAX_IMAGE_BYTES) {
+        return reply.code(400).send({ error: `File too large (max ${Math.round(MAX_IMAGE_BYTES / 1024 / 1024)}MB)` });
+      }
+
+      const { url } = await saveUploadedFile(buffer, data.filename, "blog", id);
+
+      if (post.coverImageUrl) {
+        await deleteUploadedFile(post.coverImageUrl);
+      }
+
+      const updated = await instance.prisma.blogPost.update({
+        where: { id },
+        data: { coverImageUrl: url },
+      });
+
+      return reply.code(201).send({ post: updated });
+    });
+
+    instance.delete("/admin/blog/posts/:id/cover", async (request, reply) => {
+      const { id } = request.params as { id: string };
+
+      const post = await instance.prisma.blogPost.findUnique({ where: { id } });
+      if (!post) return reply.code(404).send({ error: "Post not found" });
+
+      if (post.coverImageUrl) {
+        await deleteUploadedFile(post.coverImageUrl);
+      }
+
+      const updated = await instance.prisma.blogPost.update({
+        where: { id },
+        data: { coverImageUrl: null },
+      });
+
+      return reply.send({ post: updated });
     });
   });
 }

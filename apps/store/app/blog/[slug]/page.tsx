@@ -8,6 +8,12 @@ interface Props {
   params: Promise<{ slug: string }>;
 }
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
+
+function resolveCoverUrl(url: string): string {
+  return url.startsWith("http") ? url : `${API_URL}${url}`;
+}
+
 async function getPost(slug: string) {
   try {
     const { post } = await getApiClient().blog.get(slug);
@@ -35,13 +41,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description,
       type: "article",
       publishedTime: post.publishedAt ?? undefined,
-      images: post.coverImageUrl ? [post.coverImageUrl] : undefined,
+      images: post.coverImageUrl ? [resolveCoverUrl(post.coverImageUrl)] : undefined,
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
-      images: post.coverImageUrl ? [post.coverImageUrl] : undefined,
+      images: post.coverImageUrl ? [resolveCoverUrl(post.coverImageUrl)] : undefined,
     },
   };
 }
@@ -53,6 +59,14 @@ export default async function BlogPostPage({ params }: Props) {
 
   return (
     <article className="mx-auto max-w-2xl px-6 py-16">
+      {post.coverImageUrl && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={resolveCoverUrl(post.coverImageUrl)}
+          alt={post.title}
+          className="mb-8 h-64 w-full rounded-xl object-cover sm:h-96"
+        />
+      )}
       <h1 className="text-3xl font-bold text-foreground">{post.title}</h1>
       {post.publishedAt && (
         <time dateTime={post.publishedAt} className="mt-2 block text-sm text-foreground/50">

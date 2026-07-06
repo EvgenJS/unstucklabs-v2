@@ -7,6 +7,12 @@ export const metadata: Metadata = {
   description: "Notes on productivity, task paralysis, and building small tools that actually help.",
 };
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
+
+function resolveCoverUrl(url: string): string {
+  return url.startsWith("http") ? url : `${API_URL}${url}`;
+}
+
 interface Props {
   searchParams: Promise<{ page?: string }>;
 }
@@ -29,6 +35,14 @@ export default async function BlogPage({ searchParams }: Props) {
           {posts.map((post) => (
             <article key={post.id}>
               <Link href={`/blog/${post.slug}`}>
+                {post.coverImageUrl && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={resolveCoverUrl(post.coverImageUrl)}
+                    alt={post.title}
+                    className="mb-3 h-48 w-full rounded-xl object-cover"
+                  />
+                )}
                 <h2 className="text-xl font-semibold text-foreground hover:text-primary">{post.title}</h2>
               </Link>
               <p className="mt-2 text-foreground/70">{post.excerpt}</p>
