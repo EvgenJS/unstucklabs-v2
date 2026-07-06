@@ -3,6 +3,8 @@ import { prismaPlugin } from "./plugins/prisma.js";
 import { cookiePlugin } from "./plugins/cookie.js";
 import { corsPlugin } from "./plugins/cors.js";
 import { rateLimitPlugin } from "./plugins/rate-limit.js";
+import { multipartPlugin } from "./plugins/multipart.js";
+import { staticPlugin } from "./plugins/static.js";
 import { authPlugin } from "./modules/auth/auth.plugin.js";
 import { rbacPlugin } from "./modules/admin/rbac.plugin.js";
 import { authRoutes } from "./modules/auth/auth.routes.js";
@@ -18,6 +20,9 @@ import { blogAdminRoutes } from "./modules/blog/blog.admin.routes.js";
 import { appRequestsRoutes } from "./modules/app-requests/app-requests.routes.js";
 import { contactRoutes } from "./modules/contact/contact.routes.js";
 import { usersAdminRoutes } from "./modules/users/users.admin.routes.js";
+import { productMediaAdminRoutes } from "./modules/products/product-media.admin.routes.js";
+import { promoCodesAdminRoutes } from "./modules/promo-codes/promo-codes.admin.routes.js";
+import { promoCodesRoutes } from "./modules/promo-codes/promo-codes.routes.js";
 
 export async function buildApp(): Promise<FastifyInstance> {
   const app = Fastify({ logger: true });
@@ -29,6 +34,8 @@ export async function buildApp(): Promise<FastifyInstance> {
   await app.register(rateLimitPlugin);
   await app.register(authPlugin);
   await app.register(rbacPlugin);
+  await app.register(multipartPlugin);
+  await app.register(staticPlugin);
 
   app.get("/health", async () => {
     await app.prisma.$queryRaw`SELECT 1`;
@@ -48,6 +55,9 @@ export async function buildApp(): Promise<FastifyInstance> {
   await app.register(appRequestsRoutes);
   await app.register(contactRoutes);
   await app.register(usersAdminRoutes);
+  await app.register(productMediaAdminRoutes);
+  await app.register(promoCodesAdminRoutes);
+  await app.register(promoCodesRoutes);
 
   return app;
 }

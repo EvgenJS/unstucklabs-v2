@@ -6,6 +6,7 @@ import type { Product, ProductInput } from "@unstucklabs/sdk";
 import { useAuth } from "../../../lib/auth-context";
 import { getApiClient } from "../../../lib/api";
 import { ProductForm } from "../../../components/ProductForm";
+import { ProductMediaManager } from "../../../components/ProductMediaManager";
 
 function formatPrice(priceCents: number, currency: string) {
   return (priceCents / 100).toLocaleString("en-US", { style: "currency", currency });
@@ -28,6 +29,13 @@ export default function ProductsPage() {
     try {
       const { products } = await getApiClient(accessToken).products.admin.list();
       setProducts(products);
+      // Keep `editing` in sync (e.g. after a media upload/delete) so the
+      // gallery re-renders with fresh data instead of the stale snapshot
+      // captured when "Edit" was first clicked.
+      setEditing((current) => {
+        if (!current || current === "new") return current;
+        return products.find((p) => p.id === current.id) ?? current;
+      });
     } catch {
       // Products admin routes have no SUPPORT read access (unlike
       // Blog/Subscriptions/Users) -- the Sidebar hides this link for
@@ -43,8 +51,11 @@ export default function ProductsPage() {
 
   async function handleCreate(input: ProductInput) {
     if (!accessToken) return;
-    await getApiClient(accessToken).products.admin.create(input);
-    setEditing(null);
+    const { product } = await getApiClient(accessToken).products.admin.create(input);
+    // Switch straight to editing the new product (rather than closing the
+    // form) so the media section appears immediately -- uploads need a
+    // real productId to attach to.
+    setEditing(product);
     await refresh();
   }
 
@@ -90,12 +101,13 @@ export default function ProductsPage() {
         </div>
       )}
       {editing && editing !== "new" && (
-        <div className="mt-6">
+        <div className="mt-6 space-y-6">
           <ProductForm
             initial={editing}
             onSubmit={(input) => handleUpdate(editing.id, input)}
             onCancel={() => setEditing(null)}
           />
+          <ProductMediaManager productId={editing.id} media={editing.media ?? []} onChange={refresh} />
         </div>
       )}
 

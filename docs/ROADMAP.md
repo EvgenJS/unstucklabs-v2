@@ -117,6 +117,49 @@ social link once one exists. Everything else on this checklist is done.
 
 Deferred: audit log UI, bulk operations, analytics dashboards.
 
+## Phase 3.5 — Product Merchandising: Media & Promo Codes
+
+- [x] `ProductMedia` model (photo/video gallery per product) + local-disk
+      storage (`apps/core-api/src/lib/storage.ts`, `UPLOAD_DIR` env var,
+      served at `/uploads/...` via `@fastify/static`) — swappable to an
+      S3-compatible store later behind that same module, per the self-hosted
+      deployment model in CLAUDE.md
+- [x] `POST/DELETE /admin/products/:id/media` (multipart upload via
+      `@fastify/multipart`, image/video mime + size validation), OWNER/EDITOR
+      only, same gating as the rest of Products
+- [x] Admin: media upload + gallery (with delete) in the Products page —
+      switches straight to editing the new product after create, since
+      uploads need a real `productId`
+- [x] Store: `/apps/[slug]` renders the media gallery and renders
+      `description` through the same markdown pipeline as the blog (no
+      schema change, `description` was already free text)
+- [x] `PromoCode` + `PromoCodeRedemption` models: percentage-only discount,
+      tied to exactly one product (not store-wide), optional max uses,
+      optional expiry, hard one-redemption-per-user rule enforced by a DB
+      unique constraint
+- [x] Admin Promo Codes page (OWNER/EDITOR): create/deactivate/delete,
+      filterable by product
+- [x] `POST /promo-codes/validate` (public/authenticated) + checkout
+      (`POST /checkout/session`) accepts an optional `promoCode`, always
+      re-validated server-side (never trusts a client-computed discount)
+- [x] `CheckoutSessionParams` extended with `priceCents`/`currency` so a
+      (future) real payment provider sees the actual, possibly-discounted
+      amount to charge
+- [x] Store: promo code input + "Apply" on the checkout flow, shows the
+      discounted price before purchase
+
+**Known simplification**: promo code redemption (usedCount increment +
+`PromoCodeRedemption` row) happens atomically at checkout-session creation
+time, not on payment webhook confirmation — the real WesternBid webhook
+shape is still unknown (see External Blocking Dependencies). Consequence: an
+abandoned checkout still permanently consumes one use and the per-user
+redemption. Acceptable for an indie-scale operation for now; revisit once
+the real WesternBid adapter exists.
+
+Deferred: image/video reordering in the gallery UI, revenue/amount-paid
+tracking on Subscription, fixed-amount (vs percentage-only) discounts,
+store-wide (multi-product) promo codes.
+
 ## Phase 4+ — First Mini-App Port (Unstuck Daily)
 
 - [ ] Vite+React+TS+Tailwind+vite-plugin-pwa scaffold under `apps/unstuck-daily`
@@ -189,3 +232,12 @@ Not started until Phase 3 is done and stable.
   OWNER/EDITOR-only in core-api, which left SUPPORT users stuck on an infinite
   "Loading…" screen; now the Sidebar hides those links and the pages fall back
   to a clear "you don't have access" message if reached directly.
+- 2026-07-06 — Phase 3.5 (Product Merchandising) implemented and verified end
+  to end: local-disk media upload/storage for product photos/videos
+  (`@fastify/multipart` + `@fastify/static`), rendered as a gallery on the
+  Store's product page; percentage-only promo codes tied to a single
+  product, with atomic max-uses and one-redemption-per-user enforcement
+  verified via curl (correct rejection at the usage cap, correct
+  "already used" message when a cap isn't yet hit, expired codes rejected).
+  Checkout now takes an optional promo code, always re-validated
+  server-side.

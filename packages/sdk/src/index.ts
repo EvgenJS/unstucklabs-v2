@@ -10,6 +10,8 @@ import { createWaitlistModule } from "./modules/waitlist";
 import { createAppRequestsModule } from "./modules/app-requests";
 import { createContactModule } from "./modules/contact";
 import { createUsersModule } from "./modules/users";
+import { createPromoCodesModule } from "./modules/promo-codes";
+export type { PromoCodeInput, PromoCodeValidation } from "./modules/promo-codes";
 
 export * from "./types";
 export { ApiError } from "./client";
@@ -28,6 +30,7 @@ export function createApiClient(config: ApiClientConfig) {
     appRequests: createAppRequestsModule(config),
     contact: createContactModule(config),
     users: createUsersModule(config),
+    promoCodes: createPromoCodesModule(config),
   };
 }
 

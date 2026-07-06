@@ -1,5 +1,5 @@
-import { apiRequest, type ApiClientConfig } from "../client";
-import type { Product } from "../types";
+import { apiRequest, apiUpload, type ApiClientConfig } from "../client";
+import type { Product, ProductMedia } from "../types";
 
 export interface ProductInput {
   slug: string;
@@ -42,6 +42,14 @@ export function createProductsModule(config: ApiClientConfig) {
 
       remove(id: string) {
         return apiRequest<void>(config, `/admin/products/${id}`, { method: "DELETE" });
+      },
+
+      uploadMedia(productId: string, file: File) {
+        return apiUpload<{ media: ProductMedia }>(config, `/admin/products/${productId}/media`, file);
+      },
+
+      deleteMedia(productId: string, mediaId: string) {
+        return apiRequest<void>(config, `/admin/products/${productId}/media/${mediaId}`, { method: "DELETE" });
       },
     },
   };

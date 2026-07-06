@@ -2,6 +2,15 @@
 // not imported from @prisma/client -- the SDK is consumed by browser bundles
 // (store, mini-apps) and must never pull in server-only Prisma types/deps.
 
+export interface ProductMedia {
+  id: string;
+  productId: string;
+  url: string;
+  type: "IMAGE" | "VIDEO";
+  position: number;
+  createdAt: string;
+}
+
 export interface Product {
   id: string;
   slug: string;
@@ -14,6 +23,20 @@ export interface Product {
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
+  media?: ProductMedia[];
+}
+
+export interface PromoCode {
+  id: string;
+  code: string;
+  productId: string;
+  product?: Product;
+  discountPercent: number;
+  maxUses: number | null;
+  usedCount: number;
+  expiresAt: string | null;
+  isActive: boolean;
+  createdAt: string;
 }
 
 export interface BlogPostSummary {

@@ -12,7 +12,7 @@ export function createNullPaymentProvider(): PaymentProvider {
     async createCheckoutSession(params: CheckoutSessionParams): Promise<CheckoutSessionResult> {
       const providerSessionId = `null_${randomUUID()}`;
       return {
-        redirectUrl: `${params.successUrl}?session=${providerSessionId}`,
+        redirectUrl: `${params.successUrl}?session=${providerSessionId}&amount=${params.priceCents}`,
         providerSessionId,
       };
     },

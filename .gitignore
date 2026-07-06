@@ -11,3 +11,4 @@ coverage/
 .claude/settings.local.json
 prisma/generated/
 *.log
+apps/core-api/uploads/
