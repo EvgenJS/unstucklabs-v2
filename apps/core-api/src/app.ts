@@ -17,6 +17,7 @@ import { blogRoutes } from "./modules/blog/blog.routes.js";
 import { blogAdminRoutes } from "./modules/blog/blog.admin.routes.js";
 import { appRequestsRoutes } from "./modules/app-requests/app-requests.routes.js";
 import { contactRoutes } from "./modules/contact/contact.routes.js";
+import { usersAdminRoutes } from "./modules/users/users.admin.routes.js";
 
 export async function buildApp(): Promise<FastifyInstance> {
   const app = Fastify({ logger: true });
@@ -46,6 +47,7 @@ export async function buildApp(): Promise<FastifyInstance> {
   await app.register(blogAdminRoutes);
   await app.register(appRequestsRoutes);
   await app.register(contactRoutes);
+  await app.register(usersAdminRoutes);
 
   return app;
 }

@@ -49,9 +49,42 @@ export interface Subscription {
   currentPeriodEnd: string | null;
   createdAt: string;
   product: Product;
+  user?: { id: string; email: string };
 }
 
 export interface CheckoutSessionResult {
   redirectUrl: string;
   providerSessionId: string;
+}
+
+export interface AdminUserSummary {
+  id: string;
+  email: string;
+  createdAt: string;
+  lastSeenAt: string;
+  memberships: Array<{ role: "OWNER" | "EDITOR" | "SUPPORT" }>;
+  _count: { subscriptions: number };
+}
+
+export interface AdminUserDetail {
+  id: string;
+  email: string;
+  createdAt: string;
+  lastSeenAt: string;
+  memberships: Array<{ id: string; role: "OWNER" | "EDITOR" | "SUPPORT" }>;
+  subscriptions: Subscription[];
+}
+
+export interface AppRequest {
+  id: string;
+  email: string;
+  description: string;
+  createdAt: string;
+}
+
+export interface ContactMessage {
+  id: string;
+  email: string;
+  message: string;
+  createdAt: string;
 }

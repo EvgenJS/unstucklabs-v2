@@ -2,11 +2,14 @@ import type { ApiClientConfig } from "./client";
 import { createAuthModule } from "./modules/auth";
 import { createProductsModule } from "./modules/products";
 import { createBlogModule } from "./modules/blog";
+export type { ProductInput } from "./modules/products";
+export type { BlogPostInput } from "./modules/blog";
 import { createSubscriptionsModule } from "./modules/subscriptions";
 import { createPaymentsModule } from "./modules/payments";
 import { createWaitlistModule } from "./modules/waitlist";
 import { createAppRequestsModule } from "./modules/app-requests";
 import { createContactModule } from "./modules/contact";
+import { createUsersModule } from "./modules/users";
 
 export * from "./types";
 export { ApiError } from "./client";
@@ -24,6 +27,7 @@ export function createApiClient(config: ApiClientConfig) {
     waitlist: createWaitlistModule(config),
     appRequests: createAppRequestsModule(config),
     contact: createContactModule(config),
+    users: createUsersModule(config),
   };
 }
 
