@@ -2,15 +2,16 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Package, Users, CreditCard, FileText, Lightbulb, Mail, LogOut } from "lucide-react";
+import { Package, Users, CreditCard, FileText, Lightbulb, Mail, Tag, LogOut } from "lucide-react";
 import { useAuth } from "../lib/auth-context";
 
 const navItems = [
-  // Products and Blog admin routes are OWNER/EDITOR only in core-api (no
-  // SUPPORT read access, unlike Subscriptions/Users/App Requests/Contact
-  // Messages) -- gated here too so SUPPORT doesn't land on a page that 403s
-  // on every request.
+  // Products, Promo Codes, and Blog admin routes are OWNER/EDITOR only in
+  // core-api (no SUPPORT read access, unlike Subscriptions/Users/App
+  // Requests/Contact Messages) -- gated here too so SUPPORT doesn't land on
+  // a page that 403s on every request.
   { href: "/products", label: "Products", icon: Package, roles: ["OWNER", "EDITOR"] },
+  { href: "/promo-codes", label: "Promo Codes", icon: Tag, roles: ["OWNER", "EDITOR"] },
   { href: "/users", label: "Users", icon: Users, roles: ["OWNER", "EDITOR", "SUPPORT"] },
   { href: "/subscriptions", label: "Subscriptions", icon: CreditCard, roles: ["OWNER", "EDITOR", "SUPPORT"] },
   { href: "/blog", label: "Blog", icon: FileText, roles: ["OWNER", "EDITOR"] },

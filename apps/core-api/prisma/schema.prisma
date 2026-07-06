@@ -32,6 +32,11 @@ enum BlogPostStatus {
   PUBLISHED
 }
 
+enum MediaType {
+  IMAGE
+  VIDEO
+}
+
 model User {
   id           String   @id @default(cuid())
   email        String   @unique
@@ -40,9 +45,10 @@ model User {
   lastSeenAt   DateTime @default(now())
 
   // Admin RBAC: absence of a Membership row means "not an admin user".
-  memberships   Membership[]
-  subscriptions Subscription[]
-  appUserData   AppUserData[]
+  memberships          Membership[]
+  subscriptions        Subscription[]
+  appUserData          AppUserData[]
+  promoCodeRedemptions PromoCodeRedemption[]
 
   @@map("users")
 }
@@ -76,8 +82,63 @@ model Product {
   updatedAt    DateTime     @updatedAt
 
   subscriptions Subscription[]
+  media         ProductMedia[]
+  promoCodes    PromoCode[]
 
   @@map("products")
+}
+
+// Photo/video gallery content for a product, uploaded via the Admin panel
+// and stored on local disk (see lib/storage.ts) -- swappable to S3-compatible
+// storage later behind that same module without touching this schema.
+model ProductMedia {
+  id        String    @id @default(cuid())
+  productId String
+  product   Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  url       String
+  type      MediaType
+  position  Int       @default(0)
+  createdAt DateTime  @default(now())
+
+  @@map("product_media")
+}
+
+// Percentage-discount promo code tied to exactly one product (not store-wide,
+// per the confirmed per-app selling model already used for Subscription).
+// `usedCount` is incremented atomically alongside PromoCodeRedemption at
+// checkout-session creation time -- not on payment webhook confirmation,
+// since the real WesternBid webhook shape is still unknown. Consequence: an
+// abandoned checkout still consumes one use. Acceptable for now; revisit
+// once the real WesternBid adapter exists (see docs/ROADMAP.md).
+model PromoCode {
+  id              String    @id @default(cuid())
+  code            String    @unique
+  productId       String
+  product         Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  discountPercent Int
+  maxUses         Int?
+  usedCount       Int       @default(0)
+  expiresAt       DateTime?
+  isActive        Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+
+  redemptions     PromoCodeRedemption[]
+
+  @@map("promo_codes")
+}
+
+// Enforces one redemption per user via the unique constraint -- a duplicate
+// insert attempt fails atomically under concurrency, no manual locking needed.
+model PromoCodeRedemption {
+  id          String    @id @default(cuid())
+  promoCodeId String
+  promoCode   PromoCode @relation(fields: [promoCodeId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+
+  @@unique([promoCodeId, userId])
+  @@map("promo_code_redemptions")
 }
 
 // One row per user-product purchase/subscription relationship. Always scoped

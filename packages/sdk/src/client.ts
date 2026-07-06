@@ -49,3 +49,32 @@ export async function apiRequest<T>(
 
   return body as T;
 }
+
+// Separate from apiRequest because multipart uploads must NOT have
+// Content-Type set manually -- the browser needs to add its own boundary
+// parameter, which only happens if we let fetch set the header itself from
+// the FormData body.
+export async function apiUpload<T>(config: ApiClientConfig, path: string, file: File | Blob): Promise<T> {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const headers = new Headers();
+  if (config.accessToken) {
+    headers.set("Authorization", `Bearer ${config.accessToken}`);
+  }
+
+  const response = await fetch(`${config.baseUrl}${path}`, {
+    method: "POST",
+    body: formData,
+    headers,
+    credentials: "include",
+  });
+
+  const body = await response.json().catch(() => undefined);
+
+  if (!response.ok) {
+    throw new ApiError(response.status, body);
+  }
+
+  return body as T;
+}

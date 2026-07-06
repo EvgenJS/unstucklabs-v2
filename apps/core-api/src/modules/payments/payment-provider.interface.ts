@@ -8,6 +8,9 @@ export interface CheckoutSessionParams {
   productId: string;
   successUrl: string;
   cancelUrl: string;
+  /** Final amount to charge, in cents -- already discounted if a promo code was applied. */
+  priceCents: number;
+  currency: string;
 }
 
 export interface CheckoutSessionResult {

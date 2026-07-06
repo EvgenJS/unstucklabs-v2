@@ -7,6 +7,7 @@ export async function productsRoutes(fastify: FastifyInstance) {
   fastify.get("/products", async () => {
     const products = await fastify.prisma.product.findMany({
       where: { isActive: true },
+      include: { media: { orderBy: { position: "asc" } } },
       orderBy: { createdAt: "asc" },
     });
     return { products };
@@ -14,7 +15,10 @@ export async function productsRoutes(fastify: FastifyInstance) {
 
   fastify.get("/products/:slug", async (request, reply) => {
     const { slug } = request.params as { slug: string };
-    const product = await fastify.prisma.product.findUnique({ where: { slug } });
+    const product = await fastify.prisma.product.findUnique({
+      where: { slug },
+      include: { media: { orderBy: { position: "asc" } } },
+    });
 
     if (!product || !product.isActive) {
       return reply.code(404).send({ error: "Product not found" });

@@ -24,6 +24,7 @@ export async function productsAdminRoutes(fastify: FastifyInstance) {
 
     instance.get("/admin/products", async () => {
       const products = await instance.prisma.product.findMany({
+        include: { media: { orderBy: { position: "asc" } } },
         orderBy: { createdAt: "asc" },
       });
       return { products };
