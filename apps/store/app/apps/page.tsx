@@ -3,6 +3,12 @@ import Link from "next/link";
 import { Card } from "@unstucklabs/ui";
 import { getApiClient } from "../../lib/api";
 
+// Live catalog data -- not statically prerendered. We self-host on a
+// persistently-running Node server (no serverless/ISR infra, see
+// CLAUDE.md), so request-time rendering is the natural fit; it also avoids
+// needing core-api reachable at build time (CI builds without a backend).
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Apps",
   description: "Browse every UnstuckLabs tool — small, focused, and sold on its own.",
