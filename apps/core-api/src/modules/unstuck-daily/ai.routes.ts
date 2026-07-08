@@ -47,18 +47,37 @@ interface UnstuckDailyAiUsage {
   callsToday: number;
 }
 
+// Attempt plan: retry the free auto-router twice (it re-samples routing on
+// every call, so a second attempt often lands on a different, unblocked
+// provider), then fall through to a specific free model, then -- only if
+// every free option failed -- a paid call on the same model so the user
+// essentially never sees a hard failure. OPENROUTER_FALLBACK_MODEL requires
+// the account's OpenRouter privacy/data-policy settings to allow free-tier
+// providers (https://openrouter.ai/settings/privacy); until that's enabled
+// it 404s and this step is silently skipped. OPENROUTER_PAID_FALLBACK_MODEL
+// costs real (tiny, ~$0.00004/call) money -- leave unset to disable it.
+function buildAttemptPlan(): string[] {
+  const primary = process.env.OPENROUTER_MODEL ?? DEFAULT_MODEL;
+  const freeFallback = process.env.OPENROUTER_FALLBACK_MODEL;
+  const paidFallback = process.env.OPENROUTER_PAID_FALLBACK_MODEL;
+
+  const plan = [primary, primary];
+  if (freeFallback && freeFallback !== primary) plan.push(freeFallback);
+  if (paidFallback) plan.push(paidFallback);
+  return plan;
+}
+
 function extractJson(text: string): unknown {
   const match = text.match(/\{[\s\S]*\}/);
   if (!match) throw new Error("No JSON object found in model response");
   return JSON.parse(match[0]);
 }
 
-async function callOpenRouter(userMessage: string): Promise<unknown> {
+async function callOpenRouter(model: string, userMessage: string): Promise<unknown> {
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) {
     throw new Error("OPENROUTER_API_KEY not configured");
   }
-  const model = process.env.OPENROUTER_MODEL ?? DEFAULT_MODEL;
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 30_000);
@@ -141,38 +160,45 @@ export async function unstuckDailyAiRoutes(fastify: FastifyInstance) {
         ? `Brain dump: ${body.brainDump}\n\nThe task: ${body.taskTitle}`
         : `The task: ${body.taskTitle}`;
 
-      // openrouter/free routes across many free models/providers, which
-      // observed real-world flakiness during testing: per-model upstream
-      // rate limits, transient provider infra errors (502s), and reasoning
-      // models occasionally returning malformed/empty content. None of
-      // these are specific to a single request, so a few attempts with a
-      // short backoff resolves most of them rather than failing the user's
-      // very first try.
-      const MAX_ATTEMPTS = 3;
+      // Free-tier flakiness observed during testing: per-model upstream rate
+      // limits, transient provider infra errors (502s), reasoning models
+      // occasionally returning malformed/empty content, and -- when the
+      // whole openrouter/free pool is congested -- 429s on every attempt.
+      // None of these are specific to a single request, so we walk a plan of
+      // models (see buildAttemptPlan) with a short backoff between tries
+      // rather than failing the user's very first attempt.
+      const attemptPlan = buildAttemptPlan();
       let parsed: z.infer<typeof aiResponseSchema> | undefined;
       let lastError: unknown;
+      let succeededModel: string | undefined;
 
-      for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+      for (let i = 0; i < attemptPlan.length; i++) {
+        const model = attemptPlan[i]!;
         try {
-          const message = attempt === 1 ? userMessage : `${userMessage}\n\n${JSON_ONLY_REMINDER}`;
-          const raw = await callOpenRouter(message);
+          const message = i === 0 ? userMessage : `${userMessage}\n\n${JSON_ONLY_REMINDER}`;
+          const raw = await callOpenRouter(model, message);
           const result = aiResponseSchema.safeParse(raw);
           if (result.success) {
             parsed = result.data;
+            succeededModel = model;
             break;
           }
           lastError = result.error;
         } catch (err) {
           lastError = err;
         }
-        if (attempt < MAX_ATTEMPTS) {
+        if (i < attemptPlan.length - 1) {
           await new Promise((resolve) => setTimeout(resolve, 1000));
         }
       }
 
       if (!parsed) {
-        request.log.error({ err: lastError }, `AI call failed after ${MAX_ATTEMPTS} attempts`);
+        request.log.error({ err: lastError, attemptPlan }, `AI call failed after ${attemptPlan.length} attempts`);
         return reply.code(502).send({ error: "Couldn't reach the AI coach just now -- try again in a moment." });
+      }
+
+      if (succeededModel === process.env.OPENROUTER_PAID_FALLBACK_MODEL) {
+        request.log.warn({ model: succeededModel, userId }, "AI request fell back to paid model");
       }
 
       const nextUsage: UnstuckDailyAiUsage = { date: today, callsToday: usage.callsToday + 1 };
