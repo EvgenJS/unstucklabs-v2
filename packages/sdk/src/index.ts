@@ -14,7 +14,7 @@ import { createPromoCodesModule } from "./modules/promo-codes";
 export type { PromoCodeInput, PromoCodeValidation } from "./modules/promo-codes";
 import { createAppUserDataModule } from "./modules/app-user-data";
 import { createUnstuckDailyModule } from "./modules/unstuck-daily";
-export type { TaskBreakdown, PushSubscriptionKeys } from "./modules/unstuck-daily";
+export type { TaskBreakdown, PushSubscriptionKeys, Resource } from "./modules/unstuck-daily";
 
 export * from "./types";
 export { ApiError } from "./client";

@@ -1,14 +1,76 @@
 import { useState } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { Button } from "@unstucklabs/ui";
+import type { Resource } from "@unstucklabs/sdk";
 import type { CurrentTask } from "../lib/types";
 import { FocusTimer } from "./FocusTimer";
+import { getApiClient } from "../lib/api";
+import { useAuth } from "../lib/auth-context";
 
 interface Props {
   task: CurrentTask;
   onCompleteSubtask: (subtaskId: string) => void;
   onAbandon: () => void;
   onViewHistory: () => void;
+}
+
+// Opt-in per-subtask link finder -- separate component so its state
+// (resources fetched, loading, error) naturally resets whenever the parent
+// remounts it with a new `key` (see usage below), instead of needing manual
+// resets on every subtask change.
+function FindResources({ subtaskTitle, taskTitle }: { subtaskTitle: string; taskTitle: string }) {
+  const { accessToken } = useAuth();
+  const [state, setState] = useState<"idle" | "loading" | "error">("idle");
+  const [resources, setResources] = useState<Resource[]>([]);
+
+  async function handleClick() {
+    if (!accessToken) return;
+    setState("loading");
+    try {
+      const { resources: found } = await getApiClient(accessToken).unstuckDaily.ai.findResources(
+        subtaskTitle,
+        taskTitle
+      );
+      setResources(found);
+      setState("idle");
+    } catch {
+      setState("error");
+    }
+  }
+
+  if (resources.length > 0) {
+    return (
+      <ul className="mt-4 flex w-full flex-col gap-2 text-left">
+        {resources.map((r) => (
+          <li key={r.url}>
+            <a
+              href={r.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block rounded-lg border border-border px-3 py-2 text-sm text-primary hover:underline"
+            >
+              {r.title}
+            </a>
+          </li>
+        ))}
+      </ul>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      disabled={state === "loading"}
+      className="mt-4 cursor-pointer text-sm text-foreground/50 hover:text-foreground disabled:cursor-wait"
+    >
+      {state === "loading"
+        ? "Looking…"
+        : state === "error"
+          ? "Couldn't find anything -- try again?"
+          : "Find resources for this step"}
+    </button>
+  );
 }
 
 export function FocusView({ task, onCompleteSubtask, onAbandon, onViewHistory }: Props) {
@@ -48,6 +110,7 @@ export function FocusView({ task, onCompleteSubtask, onAbandon, onViewHistory }:
             <Button className="mt-6" onClick={() => onCompleteSubtask(nextSubtask.id)}>
               Done, next step
             </Button>
+            <FindResources key={nextSubtask.id} subtaskTitle={nextSubtask.title} taskTitle={task.title} />
           </motion.div>
         )}
       </AnimatePresence>

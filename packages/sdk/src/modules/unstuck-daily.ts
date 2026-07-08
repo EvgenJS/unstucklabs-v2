@@ -11,6 +11,11 @@ export interface PushSubscriptionKeys {
   keys: { p256dh: string; auth: string };
 }
 
+export interface Resource {
+  title: string;
+  url: string;
+}
+
 // Unstuck-Daily-specific endpoints (AI task breakdown + push subscribe).
 // Everything else the mini-app needs (its own task/session/history state)
 // goes through the generic `appUserData` module instead.
@@ -21,6 +26,13 @@ export function createUnstuckDailyModule(config: ApiClientConfig) {
         return apiRequest<TaskBreakdown>(config, "/apps/unstuck-daily/ai/split-task", {
           method: "POST",
           body: JSON.stringify({ taskTitle, brainDump }),
+        });
+      },
+
+      findResources(subtaskTitle: string, taskTitle?: string) {
+        return apiRequest<{ resources: Resource[] }>(config, "/apps/unstuck-daily/ai/find-resources", {
+          method: "POST",
+          body: JSON.stringify({ subtaskTitle, taskTitle }),
         });
       },
     },
