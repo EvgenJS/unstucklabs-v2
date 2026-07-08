@@ -15,6 +15,7 @@ async function main() {
       description: "Break down big tasks into small, doable steps.",
       pricingModel: "RECURRING",
       priceCents: 700,
+      annualPriceCents: 7000, // ~10 months for 12 -- standard annual-discount framing
       currency: "USD",
       isActive: true,
     },

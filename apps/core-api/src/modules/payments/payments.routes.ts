@@ -8,6 +8,7 @@ const checkoutSchema = z.object({
   successUrl: z.string().url(),
   cancelUrl: z.string().url(),
   promoCode: z.string().optional(),
+  billingPeriod: z.enum(["MONTHLY", "ANNUAL"]).default("MONTHLY"),
 });
 
 export async function paymentsRoutes(fastify: FastifyInstance) {
@@ -22,7 +23,8 @@ export async function paymentsRoutes(fastify: FastifyInstance) {
       return reply.code(404).send({ error: "Product not found" });
     }
 
-    let priceCents = product.priceCents;
+    let priceCents =
+      body.billingPeriod === "ANNUAL" ? (product.annualPriceCents ?? product.priceCents * 12) : product.priceCents;
 
     if (body.promoCode) {
       const result = await validatePromoCode(fastify.prisma, {
@@ -45,7 +47,7 @@ export async function paymentsRoutes(fastify: FastifyInstance) {
         return reply.code(400).send({ error: "This promo code just reached its usage limit" });
       }
 
-      priceCents = Math.round(product.priceCents * (1 - result.promoCode.discountPercent / 100));
+      priceCents = Math.round(priceCents * (1 - result.promoCode.discountPercent / 100));
     }
 
     const session = await provider.createCheckoutSession({
@@ -55,6 +57,7 @@ export async function paymentsRoutes(fastify: FastifyInstance) {
       cancelUrl: body.cancelUrl,
       priceCents,
       currency: product.currency,
+      billingPeriod: body.billingPeriod,
     });
 
     return reply.send(session);

@@ -11,6 +11,7 @@ export interface CheckoutSessionParams {
   /** Final amount to charge, in cents -- already discounted if a promo code was applied. */
   priceCents: number;
   currency: string;
+  billingPeriod?: "MONTHLY" | "ANNUAL";
 }
 
 export interface CheckoutSessionResult {
@@ -31,6 +32,7 @@ export interface WebhookEvent {
   providerCustomerId?: string;
   providerSubscriptionId?: string;
   providerTransactionId?: string;
+  billingPeriod?: "MONTHLY" | "ANNUAL";
   raw: unknown;
 }
 
