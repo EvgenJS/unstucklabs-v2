@@ -35,7 +35,12 @@ const JSON_ONLY_REMINDER = "Reply with JSON only, nothing else -- no markdown, n
 
 const PRODUCT_SLUG = "unstuck-daily";
 const DEFAULT_DAILY_CAP = 15;
-const DEFAULT_MODEL = "meta-llama/llama-3.1-8b-instruct:free";
+// openrouter/free is OpenRouter's auto-router across ALL currently-free
+// models -- more resilient than pinning one model+provider combo (e.g.
+// meta-llama/llama-3.3-70b-instruct:free was found to be persistently
+// rate-limited upstream via its Venice provider during testing). Override
+// via OPENROUTER_MODEL to pin a specific model if ever needed.
+const DEFAULT_MODEL = "openrouter/free";
 
 interface UnstuckDailyAiUsage {
   date: string;
@@ -56,7 +61,7 @@ async function callOpenRouter(userMessage: string): Promise<unknown> {
   const model = process.env.OPENROUTER_MODEL ?? DEFAULT_MODEL;
 
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 15_000);
+  const timeout = setTimeout(() => controller.abort(), 30_000);
 
   try {
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
@@ -67,7 +72,12 @@ async function callOpenRouter(userMessage: string): Promise<unknown> {
       },
       body: JSON.stringify({
         model,
-        max_tokens: 500,
+        // Generous headroom: openrouter/free can route to a reasoning model
+        // that spends its token budget on a visible "reasoning" chain before
+        // ever writing the final JSON -- observed a 500-token budget getting
+        // fully consumed by reasoning alone (finish_reason: "length",
+        // content: null) during testing. 1200 leaves room for both.
+        max_tokens: 1200,
         temperature: 0.4,
         messages: [
           { role: "system", content: SYSTEM_PROMPT },
@@ -131,21 +141,37 @@ export async function unstuckDailyAiRoutes(fastify: FastifyInstance) {
         ? `Brain dump: ${body.brainDump}\n\nThe task: ${body.taskTitle}`
         : `The task: ${body.taskTitle}`;
 
-      let parsed: z.infer<typeof aiResponseSchema>;
-      try {
-        let raw = await callOpenRouter(userMessage);
-        let result = aiResponseSchema.safeParse(raw);
-        if (!result.success) {
-          raw = await callOpenRouter(`${userMessage}\n\n${JSON_ONLY_REMINDER}`);
-          result = aiResponseSchema.safeParse(raw);
+      // openrouter/free routes across many free models/providers, which
+      // observed real-world flakiness during testing: per-model upstream
+      // rate limits, transient provider infra errors (502s), and reasoning
+      // models occasionally returning malformed/empty content. None of
+      // these are specific to a single request, so a few attempts with a
+      // short backoff resolves most of them rather than failing the user's
+      // very first try.
+      const MAX_ATTEMPTS = 3;
+      let parsed: z.infer<typeof aiResponseSchema> | undefined;
+      let lastError: unknown;
+
+      for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+        try {
+          const message = attempt === 1 ? userMessage : `${userMessage}\n\n${JSON_ONLY_REMINDER}`;
+          const raw = await callOpenRouter(message);
+          const result = aiResponseSchema.safeParse(raw);
+          if (result.success) {
+            parsed = result.data;
+            break;
+          }
+          lastError = result.error;
+        } catch (err) {
+          lastError = err;
         }
-        if (!result.success) {
-          request.log.error({ err: result.error }, "AI response failed validation twice");
-          return reply.code(502).send({ error: "Couldn't reach the AI coach just now -- try again in a moment." });
+        if (attempt < MAX_ATTEMPTS) {
+          await new Promise((resolve) => setTimeout(resolve, 1000));
         }
-        parsed = result.data;
-      } catch (err) {
-        request.log.error(err, "OpenRouter call failed");
+      }
+
+      if (!parsed) {
+        request.log.error({ err: lastError }, `AI call failed after ${MAX_ATTEMPTS} attempts`);
         return reply.code(502).send({ error: "Couldn't reach the AI coach just now -- try again in a moment." });
       }
 
