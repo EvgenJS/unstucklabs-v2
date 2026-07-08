@@ -62,12 +62,17 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     };
   }, [flush]);
 
+  // Computes `next` synchronously against the ref (not via setData's own
+  // functional-updater form) so latestData.current is correct the instant
+  // this call returns -- callers like completeSubtask() that flush()
+  // immediately afterward need that guarantee. Relying on setData's updater
+  // would leave latestData.current stale until React processes the queued
+  // update (it doesn't run synchronously in an event handler), which meant
+  // flush() was shipping the pre-completion snapshot to the server.
   function update(updater: (current: UnstuckDailyData) => UnstuckDailyData) {
-    setData((current) => {
-      const next = updater(current);
-      latestData.current = next;
-      return next;
-    });
+    const next = updater(latestData.current);
+    latestData.current = next;
+    setData(next);
     scheduleWrite();
   }
 
@@ -94,58 +99,65 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   }
 
   function completeSubtask(subtaskId: string) {
-    update((current) => {
-      const task = current.currentTask;
-      if (!task) return current;
+    const current = latestData.current;
+    const task = current.currentTask;
+    if (!task) return;
 
-      const subtasks = task.subtasks.map((s) =>
-        s.id === subtaskId ? { ...s, completed: true, completedAt: new Date().toISOString() } : s
-      );
-      const allDone = subtasks.every((s) => s.completed);
+    const subtasks = task.subtasks.map((s) =>
+      s.id === subtaskId ? { ...s, completed: true, completedAt: new Date().toISOString() } : s
+    );
+    const allDone = subtasks.every((s) => s.completed);
 
-      if (!allDone) {
-        return {
-          ...current,
-          currentTask: { ...task, subtasks },
-          lastActivityAt: new Date().toISOString(),
-        };
-      }
-
-      const completedTask = { ...task, subtasks, status: "completed" as const };
-      const unlocked = checkNewAchievements(current, completedTask, current.lastActivityAt);
-      if (unlocked.length > 0) setNewlyUnlocked((prev) => [...prev, ...unlocked]);
-
-      const now = new Date().toISOString();
-      const actualMinutes = Math.round((Date.now() - new Date(task.createdAt).getTime()) / 60000);
-
-      return {
+    if (!allDone) {
+      update(() => ({
         ...current,
-        currentTask: null,
-        history: [
-          {
-            taskId: task.id,
-            title: task.title,
-            completedAt: now,
-            totalSubtasks: subtasks.length,
-            completedSubtasks: subtasks.length,
-            aiEstimateMinutes: task.aiEstimateMinutes,
-            actualMinutes,
-          },
-          ...current.history,
-        ],
-        achievements: {
-          unlocked: [
-            ...current.achievements.unlocked,
-            ...unlocked.map((id) => ({ id, unlockedAt: now })),
-          ],
-          stats: {
-            totalTasksCompleted: current.achievements.stats.totalTasksCompleted + 1,
-            totalSubtasksCompleted: current.achievements.stats.totalSubtasksCompleted + subtasks.length,
-          },
+        currentTask: { ...task, subtasks },
+        lastActivityAt: new Date().toISOString(),
+      }));
+      flush();
+      return;
+    }
+
+    const completedTask = { ...task, subtasks, status: "completed" as const };
+    // Computed here (not inside update()'s updater) because setState must
+    // never be called from within another state's updater function -- React
+    // disallows it (surfaces as "Cannot update a component while rendering a
+    // different component") and it previously crashed the whole tree with no
+    // error boundary to catch it.
+    const unlocked = checkNewAchievements(current, completedTask, current.lastActivityAt);
+
+    const now = new Date().toISOString();
+    const actualMinutes = Math.round((Date.now() - new Date(task.createdAt).getTime()) / 60000);
+
+    update(() => ({
+      ...current,
+      currentTask: null,
+      history: [
+        {
+          taskId: task.id,
+          title: task.title,
+          completedAt: now,
+          totalSubtasks: subtasks.length,
+          completedSubtasks: subtasks.length,
+          aiEstimateMinutes: task.aiEstimateMinutes,
+          actualMinutes,
         },
-        lastActivityAt: now,
-      };
-    });
+        ...current.history,
+      ],
+      achievements: {
+        unlocked: [
+          ...current.achievements.unlocked,
+          ...unlocked.map((id) => ({ id, unlockedAt: now })),
+        ],
+        stats: {
+          totalTasksCompleted: current.achievements.stats.totalTasksCompleted + 1,
+          totalSubtasksCompleted: current.achievements.stats.totalSubtasksCompleted + subtasks.length,
+        },
+      },
+      lastActivityAt: now,
+    }));
+
+    if (unlocked.length > 0) setNewlyUnlocked((prev) => [...prev, ...unlocked]);
     flush();
   }
 

@@ -9,6 +9,7 @@ import { FocusView } from "./components/FocusView";
 import { CompletionView } from "./components/CompletionView";
 import { HistoryView } from "./components/HistoryView";
 import { PushPermissionBanner } from "./components/PushPermissionBanner";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 
 type Screen = "input" | "breakdown" | "focus" | "completion" | "history";
 
@@ -128,12 +129,14 @@ function AppContent() {
 
 export function App() {
   return (
-    <AuthProvider>
-      <SubscriptionGate>
-        <AppDataProvider>
-          <AppContent />
-        </AppDataProvider>
-      </SubscriptionGate>
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <SubscriptionGate>
+          <AppDataProvider>
+            <AppContent />
+          </AppDataProvider>
+        </SubscriptionGate>
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }
