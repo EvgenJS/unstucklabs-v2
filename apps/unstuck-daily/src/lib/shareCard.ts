@@ -1,5 +1,7 @@
 import { ACHIEVEMENTS } from "./achievements";
 
+const STORE_URL = "https://unstucklabs.store";
+
 export interface ShareCardData {
   taskTitle: string;
   completedSubtasks: number;
@@ -53,6 +55,13 @@ export async function generateShareCard(data: ShareCardData): Promise<Blob> {
     }
   }
 
+  // Baked into the image itself (not just the share-sheet text below) so the
+  // link survives even when the card is saved and reposted separately, e.g.
+  // to a Stories tray, where accompanying share text doesn't travel with it.
+  ctx.font = "500 28px 'DM Sans', sans-serif";
+  ctx.fillStyle = "rgba(245, 245, 255, 0.65)";
+  ctx.fillText(STORE_URL.replace("https://", ""), 80, size - 50);
+
   return new Promise((resolve, reject) => {
     canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error("toBlob failed"))), "image/png");
   });
@@ -84,6 +93,20 @@ function wrapText(ctx: CanvasRenderingContext2D, text: string, x: number, y: num
 
 export async function shareCard(blob: Blob, fileName = "unstuck-daily.png") {
   const file = new File([blob], fileName, { type: "image/png" });
+  // text + url ride alongside the image on share targets that surface them
+  // (Messages, Mail, X, etc. auto-linkify it); the watermark baked into the
+  // image itself (see generateShareCard) is the fallback for targets that
+  // only keep the file, like saving straight to Photos.
+  const shareData = {
+    files: [file],
+    title: "Unstuck Daily",
+    text: "I just got unstuck with Unstuck Daily 🎉",
+    url: STORE_URL,
+  };
+  if (navigator.share && navigator.canShare?.(shareData)) {
+    await navigator.share(shareData);
+    return;
+  }
   if (navigator.share && navigator.canShare?.({ files: [file] })) {
     await navigator.share({ files: [file], title: "Unstuck Daily" });
     return;
