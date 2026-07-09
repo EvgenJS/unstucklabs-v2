@@ -16,9 +16,9 @@ export default function HomePage() {
     <>
       <Hero />
       <PainPoints />
+      <AppPreview />
       <ValueProps />
       <HowItWorks />
-      <AppPreview />
       <CoCreation />
       <FinalCta />
     </>

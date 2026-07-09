@@ -7,6 +7,8 @@ import type { Subscription } from "@unstucklabs/sdk";
 import { useAuth } from "../../lib/auth-context";
 import { getApiClient } from "../../lib/api";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
+
 function launchUrl(subdomain: string | null) {
   if (!subdomain) return null;
   // Mini-apps aren't deployed yet (Phase 4+) -- this constructs the intended
@@ -64,11 +66,22 @@ export default function AccountPage() {
         <div className="mt-4 space-y-4">
           {subscriptions.map((sub) => {
             const url = launchUrl(sub.product.subdomain);
+            const cover = sub.product.media?.find((item) => item.type === "IMAGE");
             return (
-              <Card key={sub.id} className="flex items-center justify-between">
-                <div>
-                  <p className="font-semibold text-foreground">{sub.product.name}</p>
-                  <p className="text-sm text-foreground/70">{sub.status}</p>
+              <Card key={sub.id} className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  {cover && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={`${API_URL}${cover.url}`}
+                      alt={`${sub.product.name} cover`}
+                      className="h-14 w-20 shrink-0 rounded-lg object-cover"
+                    />
+                  )}
+                  <div>
+                    <p className="font-semibold text-foreground">{sub.product.name}</p>
+                    <p className="text-sm text-foreground/70">{sub.status}</p>
+                  </div>
                 </div>
                 {url && sub.status === "ACTIVE" && (
                   <a

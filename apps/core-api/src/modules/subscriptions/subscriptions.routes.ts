@@ -6,7 +6,7 @@ export async function subscriptionsRoutes(fastify: FastifyInstance) {
   fastify.get("/me/subscriptions", { preHandler: fastify.authenticate }, async (request) => {
     const subscriptions = await fastify.prisma.subscription.findMany({
       where: { userId: request.user!.id },
-      include: { product: true },
+      include: { product: { include: { media: { orderBy: { position: "asc" } } } } },
       orderBy: { createdAt: "desc" },
     });
     return { subscriptions };
