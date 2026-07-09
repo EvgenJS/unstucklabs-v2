@@ -8,6 +8,7 @@ export interface ProductInput {
   description?: string;
   pricingModel: "ONE_TIME" | "RECURRING" | "FREEMIUM";
   priceCents: number;
+  annualPriceCents?: number | null;
   currency?: string;
 }
 

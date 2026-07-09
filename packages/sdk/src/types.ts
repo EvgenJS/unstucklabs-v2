@@ -19,6 +19,7 @@ export interface Product {
   description: string | null;
   pricingModel: "ONE_TIME" | "RECURRING" | "FREEMIUM";
   priceCents: number;
+  annualPriceCents: number | null;
   currency: string;
   isActive: boolean;
   createdAt: string;
@@ -70,6 +71,7 @@ export interface Subscription {
   productId: string;
   status: "ACTIVE" | "CANCELED" | "PAST_DUE" | "EXPIRED" | "TRIALING";
   currentPeriodEnd: string | null;
+  billingPeriod: "MONTHLY" | "ANNUAL";
   createdAt: string;
   product: Product;
   user?: { id: string; email: string };

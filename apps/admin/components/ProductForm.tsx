@@ -19,6 +19,9 @@ export function ProductForm({ initial, onSubmit, onCancel }: Props) {
     initial?.pricingModel ?? "ONE_TIME"
   );
   const [priceCents, setPriceCents] = useState(String(initial ? initial.priceCents / 100 : ""));
+  const [annualPriceCents, setAnnualPriceCents] = useState(
+    initial?.annualPriceCents != null ? String(initial.annualPriceCents / 100) : ""
+  );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -34,6 +37,7 @@ export function ProductForm({ initial, onSubmit, onCancel }: Props) {
         description: description || undefined,
         pricingModel,
         priceCents: Math.round(Number(priceCents) * 100),
+        annualPriceCents: annualPriceCents ? Math.round(Number(annualPriceCents) * 100) : null,
       });
     } catch {
       setError("Could not save -- check the fields and try again.");
@@ -65,6 +69,16 @@ export function ProductForm({ initial, onSubmit, onCancel }: Props) {
             required
             value={priceCents}
             onChange={(e) => setPriceCents(e.target.value)}
+          />
+        </div>
+        <div>
+          <label className="mb-1 block text-sm font-medium text-foreground">Annual price (USD, optional)</label>
+          <Input
+            type="number"
+            step="0.01"
+            value={annualPriceCents}
+            onChange={(e) => setAnnualPriceCents(e.target.value)}
+            placeholder="Leave blank for no annual option"
           />
         </div>
         <div>

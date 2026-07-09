@@ -12,7 +12,7 @@ export function createNullPaymentProvider(): PaymentProvider {
     async createCheckoutSession(params: CheckoutSessionParams): Promise<CheckoutSessionResult> {
       const providerSessionId = `null_${randomUUID()}`;
       return {
-        redirectUrl: `${params.successUrl}?session=${providerSessionId}&amount=${params.priceCents}`,
+        redirectUrl: `${params.successUrl}?session=${providerSessionId}&amount=${params.priceCents}&billingPeriod=${params.billingPeriod ?? "MONTHLY"}`,
         providerSessionId,
       };
     },
@@ -24,6 +24,12 @@ export function createNullPaymentProvider(): PaymentProvider {
         userId: parsed.userId,
         productId: parsed.productId,
         providerTransactionId: `null_${randomUUID()}`,
+        // Deliberately NOT defaulted to "MONTHLY" here -- subscriptions.service.ts
+        // needs to distinguish "no billing metadata on this event" (renewal,
+        // leave the existing billingPeriod alone) from "this event says
+        // MONTHLY" (new checkout). Defaulting here would make every renewal
+        // silently reset an annual subscriber back to monthly.
+        billingPeriod: parsed.billingPeriod,
         raw: parsed,
       };
     },

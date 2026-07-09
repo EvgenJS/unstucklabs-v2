@@ -33,12 +33,17 @@ export function createSubscriptionsService(prisma: PrismaClient) {
           providerCustomerId: event.providerCustomerId,
           providerSubscriptionId: event.providerSubscriptionId,
           providerTransactionId: event.providerTransactionId,
+          billingPeriod: event.billingPeriod ?? "MONTHLY",
         },
         update: {
           status,
           providerCustomerId: event.providerCustomerId,
           providerSubscriptionId: event.providerSubscriptionId,
           providerTransactionId: event.providerTransactionId,
+          // Only set on renewal if the event actually carries billing
+          // metadata -- a renewal webhook without it must not silently
+          // reset an annual subscriber back to MONTHLY.
+          ...(event.billingPeriod ? { billingPeriod: event.billingPeriod } : {}),
         },
       });
     },

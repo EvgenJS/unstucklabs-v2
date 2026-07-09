@@ -32,11 +32,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-function formatPrice(priceCents: number, currency: string, pricingModel: string) {
-  const amount = (priceCents / 100).toLocaleString("en-US", { style: "currency", currency });
-  return pricingModel === "RECURRING" ? `${amount}/mo` : amount;
-}
-
 export default async function AppDetailPage({ params }: Props) {
   const { slug } = await params;
   const product = await getProduct(slug);
@@ -72,11 +67,14 @@ export default async function AppDetailPage({ params }: Props) {
         </div>
       )}
 
-      <p className="mt-6 text-2xl font-bold text-primary">
-        {formatPrice(product.priceCents, product.currency, product.pricingModel)}
-      </p>
       <div className="mt-8">
-        <CheckoutButton productId={product.id} productSlug={product.slug} priceCents={product.priceCents} currency={product.currency} />
+        <CheckoutButton
+          productId={product.id}
+          productSlug={product.slug}
+          priceCents={product.priceCents}
+          annualPriceCents={product.annualPriceCents}
+          currency={product.currency}
+        />
       </div>
     </div>
   );

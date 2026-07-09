@@ -37,6 +37,11 @@ enum MediaType {
   VIDEO
 }
 
+enum BillingPeriod {
+  MONTHLY
+  ANNUAL
+}
+
 model User {
   id           String   @id @default(cuid())
   email        String   @unique
@@ -49,6 +54,7 @@ model User {
   subscriptions        Subscription[]
   appUserData          AppUserData[]
   promoCodeRedemptions PromoCodeRedemption[]
+  pushSubscriptions    PushSubscription[]
 
   @@map("users")
 }
@@ -69,21 +75,23 @@ model Membership {
 
 // Registry of sellable mini-apps.
 model Product {
-  id           String       @id @default(cuid())
-  slug         String       @unique
-  name         String
-  subdomain    String?      @unique
-  description  String?
-  pricingModel PricingModel
-  priceCents   Int
-  currency     String       @default("USD")
-  isActive     Boolean      @default(true)
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
+  id               String       @id @default(cuid())
+  slug             String       @unique
+  name             String
+  subdomain        String?      @unique
+  description      String?
+  pricingModel     PricingModel
+  priceCents       Int
+  annualPriceCents Int? // null = no annual billing option offered for this product
+  currency         String       @default("USD")
+  isActive         Boolean      @default(true)
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
 
-  subscriptions Subscription[]
-  media         ProductMedia[]
-  promoCodes    PromoCode[]
+  subscriptions     Subscription[]
+  media             ProductMedia[]
+  promoCodes        PromoCode[]
+  pushSubscriptions PushSubscription[]
 
   @@map("products")
 }
@@ -122,7 +130,7 @@ model PromoCode {
   isActive        Boolean   @default(true)
   createdAt       DateTime  @default(now())
 
-  redemptions     PromoCodeRedemption[]
+  redemptions PromoCodeRedemption[]
 
   @@map("promo_codes")
 }
@@ -145,19 +153,20 @@ model PromoCodeRedemption {
 // to a single Product -- no "bundle"/all-access concept, per the confirmed
 // per-app selling model.
 model Subscription {
-  id                      String              @id @default(cuid())
-  userId                  String
-  user                    User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-  productId               String
-  product                 Product             @relation(fields: [productId], references: [id], onDelete: Restrict)
-  status                  SubscriptionStatus
-  provider                String // e.g. "westernbid" -- free text, no enum lock-in while adapter is undefined
-  providerCustomerId      String?
-  providerSubscriptionId  String?
-  providerTransactionId   String?
-  currentPeriodEnd        DateTime? // null for one-time purchases
-  createdAt               DateTime            @default(now())
-  updatedAt               DateTime            @updatedAt
+  id                     String             @id @default(cuid())
+  userId                 String
+  user                   User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId              String
+  product                Product            @relation(fields: [productId], references: [id], onDelete: Restrict)
+  status                 SubscriptionStatus
+  provider               String // e.g. "westernbid" -- free text, no enum lock-in while adapter is undefined
+  providerCustomerId     String?
+  providerSubscriptionId String?
+  providerTransactionId  String?
+  currentPeriodEnd       DateTime? // null for one-time purchases
+  billingPeriod          BillingPeriod      @default(MONTHLY) // unused/ignored for ONE_TIME products
+  createdAt              DateTime           @default(now())
+  updatedAt              DateTime           @updatedAt
 
   @@unique([userId, productId])
   @@index([providerSubscriptionId])
@@ -239,4 +248,27 @@ model AppUserData {
 
   @@unique([userId, productId])
   @@map("app_user_data")
+}
+
+// Web Push subscription for a mini-app. A dedicated relational table (not
+// AppUserData JSONB) -- the reminder scheduler needs to query efficiently
+// across ALL users' subscriptions for a given product, which is exactly the
+// cross-user-query case CLAUDE.md's AppUserData guidance carves out as
+// warranting a real table. `endpoint` is globally unique per the Push API
+// spec and doubles as the natural upsert key on re-subscription.
+model PushSubscription {
+  id                 String    @id @default(cuid())
+  userId             String
+  user               User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId          String
+  product            Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  endpoint           String    @unique
+  p256dh             String
+  auth               String
+  userAgent          String?
+  lastReminderSentAt DateTime?
+  createdAt          DateTime  @default(now())
+
+  @@index([userId, productId])
+  @@map("push_subscriptions")
 }

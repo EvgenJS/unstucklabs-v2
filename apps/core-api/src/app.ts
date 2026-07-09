@@ -7,6 +7,7 @@ import { multipartPlugin } from "./plugins/multipart.js";
 import { staticPlugin } from "./plugins/static.js";
 import { authPlugin } from "./modules/auth/auth.plugin.js";
 import { rbacPlugin } from "./modules/admin/rbac.plugin.js";
+import { productAccessPlugin } from "./modules/subscriptions/access.plugin.js";
 import { authRoutes } from "./modules/auth/auth.routes.js";
 import { productsRoutes } from "./modules/products/products.routes.js";
 import { productsAdminRoutes } from "./modules/products/products.admin.routes.js";
@@ -23,6 +24,9 @@ import { usersAdminRoutes } from "./modules/users/users.admin.routes.js";
 import { productMediaAdminRoutes } from "./modules/products/product-media.admin.routes.js";
 import { promoCodesAdminRoutes } from "./modules/promo-codes/promo-codes.admin.routes.js";
 import { promoCodesRoutes } from "./modules/promo-codes/promo-codes.routes.js";
+import { appUserDataRoutes } from "./modules/app-user-data/app-user-data.routes.js";
+import { unstuckDailyAiRoutes } from "./modules/unstuck-daily/ai.routes.js";
+import { pushRoutes } from "./modules/push/push.routes.js";
 
 export async function buildApp(): Promise<FastifyInstance> {
   const app = Fastify({ logger: true });
@@ -34,6 +38,7 @@ export async function buildApp(): Promise<FastifyInstance> {
   await app.register(rateLimitPlugin);
   await app.register(authPlugin);
   await app.register(rbacPlugin);
+  await app.register(productAccessPlugin);
   await app.register(multipartPlugin);
   await app.register(staticPlugin);
 
@@ -58,6 +63,9 @@ export async function buildApp(): Promise<FastifyInstance> {
   await app.register(productMediaAdminRoutes);
   await app.register(promoCodesAdminRoutes);
   await app.register(promoCodesRoutes);
+  await app.register(appUserDataRoutes);
+  await app.register(unstuckDailyAiRoutes);
+  await app.register(pushRoutes);
 
   return app;
 }

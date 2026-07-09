@@ -160,14 +160,44 @@ Deferred: image/video reordering in the gallery UI, revenue/amount-paid
 tracking on Subscription, fixed-amount (vs percentage-only) discounts,
 store-wide (multi-product) promo codes.
 
-## Phase 4+ — First Mini-App Port (Unstuck Daily)
+## Phase 4+ — First Mini-App (Unstuck Daily)
 
-- [ ] Vite+React+TS+Tailwind+vite-plugin-pwa scaffold under `apps/unstuck-daily`
-- [ ] Port brain-dump / AI-call feature (OpenRouter)
-- [ ] Wire subscription-gating via core-api SDK (replaces v1's boolean flag + internal webhook hack)
-- [ ] Distinct mini-app color scheme via the ui-ux-pro-max skill
+Superseded the original narrower scope (scaffold + AI-call port + gating +
+palette): the client asked for a from-scratch rewrite, not a v1 port, with a
+materially larger feature set (visual focus timer, gamification, sharing,
+real push notifications) — see the Change Log entry below for the full
+rationale and the design-direction selection process.
 
-Not started until Phase 3 is done and stable.
+- [x] Prisma: `Product.annualPriceCents`, `Subscription.billingPeriod`, `PushSubscription` table + migration
+- [x] core-api: generic `AppUserData` module (`GET`/`PUT /apps/:productSlug/data`) + `requireProductAccess` plugin
+- [x] core-api: AI proxy (OpenRouter, free Llama model, per-user daily cap, coach-persona system prompt)
+- [x] core-api: push module (VAPID config, subscribe/unsubscribe, in-process reminder scheduler)
+- [x] Payments: monthly/annual billing end to end (Store toggle → SDK → checkout → `Subscription.billingPeriod`)
+- [x] Vite+React+TS+Tailwind v4+vite-plugin-pwa (`injectManifest`) scaffold under `apps/unstuck-daily` — first Vite app in the repo, establishes the pattern
+- [x] Frontend: task input → AI breakdown → focus/execution view → completion → history
+- [x] Visual focus timer ("the glow" — ambient radial progress, no countdown pressure)
+- [x] Gamification: lifetime milestone badges, explicitly no streaks/no shame
+- [x] Shareable completion card (canvas-based)
+- [x] Push notification permission flow + custom service worker push handler
+- [x] Subscription gating: client redirect (`SubscriptionGate`) + server enforcement (`requireProductAccess`)
+- [x] Distinct mini-app color scheme via the `ui-ux-pro-max` skill — "Sky optimism" (indigo + sunrise-yellow accent, DM Sans), chosen by the client from 5 generated candidate directions
+
+Requires an OpenRouter account/API key (self-serve signup) before AI features
+work locally, and locally-generated VAPID keys (`npx web-push generate-vapid-keys`)
+before push notifications work — neither is a blocker like WesternBid, both
+are one-time setup steps documented in `apps/core-api/.env.example`.
+
+**Known simplification**: `AppUserData.data` (task/session/history/achievement
+state) is read-whole/write-whole per user, same pattern as the existing
+promo-code note elsewhere in this document — true concurrent multi-tab edits
+have a small last-write-wins race window. Acceptable at this scale; revisit
+only if it's a real problem.
+
+**Deployment caveat**: the push reminder scheduler is an in-process
+`setInterval` in core-api (no new external infra, consistent with the
+self-hosted PM2 model) — correct only when core-api runs as a single
+process. Running it in PM2 cluster mode would run one interval per worker
+and double-send reminders.
 
 ## External Blocking Dependencies
 
@@ -256,3 +286,27 @@ Not started until Phase 3 is done and stable.
   `POST`/`DELETE /admin/blog/posts/:id/cover` routes, an admin
   `BlogCoverManager` upload widget (mirrors `ProductMediaManager`), and
   cover image rendering on both the Store's blog list and post pages.
+- 2026-07-08 — Phase 4+ (Unstuck Daily) implemented as a from-scratch
+  rewrite, not a port of the archived v1 prototype — the client asked for
+  the concept only, explicitly rejecting v1's MongoDB/Paddle/internal-
+  webhook architecture. Added: monthly/annual billing
+  (`Product.annualPriceCents`, `Subscription.billingPeriod`, threaded
+  through checkout/webhooks/Store UI/Admin); a generic, reusable
+  `AppUserData` module (`GET`/`PUT /apps/:productSlug/data`) plus a
+  `requireProductAccess` gate mirroring the existing RBAC pattern — both
+  meant for every future mini-app, not just this one; an OpenRouter-backed
+  AI task-breakdown proxy with a coach-persona system prompt and a per-user
+  daily cap (abuse backstop, not a cost lever, since the model is free); a
+  full Web Push notification system (VAPID, a `PushSubscription` table --
+  the one place this feature graduates out of `AppUserData` into a real
+  table, since the reminder scheduler needs to query across all users — and
+  an in-process `setInterval` scheduler, no new external infra); the first
+  Vite app in the monorepo (`apps/unstuck-daily`, `vite-plugin-pwa` in
+  `injectManifest` mode since a custom push/notificationclick handler isn't
+  possible in `generateSW` mode); an ambient, non-countdown focus timer
+  ("the glow"); lifetime-milestone gamification (explicitly no streaks, to
+  avoid contradicting the product's own "no shame, no pressure" positioning);
+  and a canvas-based shareable completion card. Design direction ("Sky
+  optimism" — indigo + sunrise-yellow accent, DM Sans) was chosen by the
+  client from 5 candidate directions generated via the `ui-ux-pro-max`
+  skill and presented as an interactive visual comparison, not assumed.

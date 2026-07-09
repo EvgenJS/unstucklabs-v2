@@ -8,6 +8,7 @@ const createProductSchema = z.object({
   description: z.string().optional(),
   pricingModel: z.enum(["ONE_TIME", "RECURRING", "FREEMIUM"]),
   priceCents: z.number().int().nonnegative(),
+  annualPriceCents: z.number().int().nonnegative().nullable().optional(),
   currency: z.string().length(3).optional(),
 });
 
