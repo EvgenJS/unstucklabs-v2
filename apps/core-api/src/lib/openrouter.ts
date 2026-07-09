@@ -16,9 +16,11 @@ export async function callOpenRouter(
   model: string,
   systemPrompt: string,
   userMessage: string,
-  opts?: { maxTokens?: number; temperature?: number; timeoutMs?: number }
+  opts?: { maxTokens?: number; temperature?: number; timeoutMs?: number; apiKey?: string }
 ): Promise<unknown> {
-  const apiKey = process.env.OPENROUTER_API_KEY;
+  // Callers can pass their own key (e.g. a per-app key for separate cost
+  // tracking/rate limits) -- falls back to the shared default.
+  const apiKey = opts?.apiKey ?? process.env.OPENROUTER_API_KEY;
   if (!apiKey) {
     throw new Error("OPENROUTER_API_KEY not configured");
   }
@@ -76,7 +78,7 @@ export async function retryJsonCall<T>(
   systemPrompt: string,
   userMessage: string,
   schema: z.ZodType<T>,
-  opts?: { maxTokens?: number; temperature?: number; jsonOnlyReminder?: string; backoffMs?: number }
+  opts?: { maxTokens?: number; temperature?: number; jsonOnlyReminder?: string; backoffMs?: number; apiKey?: string }
 ): Promise<RetryJsonCallResult<T>> {
   const jsonOnlyReminder = opts?.jsonOnlyReminder ?? DEFAULT_JSON_ONLY_REMINDER;
   let lastError: unknown;

@@ -99,6 +99,14 @@ function todayUsage(usage: DailyUsage | undefined, today: string): DailyUsage {
   return usage?.date === today ? usage : { date: today, callsToday: 0 };
 }
 
+// A separate OpenRouter key for HabitFlow, distinct from the shared
+// OPENROUTER_API_KEY used by Unstuck Daily -- lets each app's OpenRouter
+// spend be tracked/capped independently. Falls back to the shared key if
+// unset, so a fresh clone still works with just one key configured.
+function habitflowApiKey(): string | undefined {
+  return process.env.HABITFLOW_OPENROUTER_API_KEY;
+}
+
 // AI proxy for HabitFlow's coach + recovery-day features. Server-side only,
 // since it holds the OpenRouter API key -- gated by requireProductAccess()
 // (which treats TRIALING identically to ACTIVE, so the 5-day free trial
@@ -142,6 +150,7 @@ export async function habitflowAiRoutes(fastify: FastifyInstance) {
       const { parsed, lastError } = await retryJsonCall(attemptPlan, COACH_SYSTEM_PROMPT, userMessage, coachResponseSchema, {
         maxTokens: 800,
         jsonOnlyReminder: JSON_ONLY_REMINDER,
+        apiKey: habitflowApiKey(),
       });
 
       if (!parsed) {
@@ -202,7 +211,7 @@ export async function habitflowAiRoutes(fastify: FastifyInstance) {
         RECOVERY_SYSTEM_PROMPT,
         userMessage,
         recoveryResponseSchema,
-        { maxTokens: 300, jsonOnlyReminder: JSON_ONLY_REMINDER }
+        { maxTokens: 300, jsonOnlyReminder: JSON_ONLY_REMINDER, apiKey: habitflowApiKey() }
       );
 
       if (!parsed) {
