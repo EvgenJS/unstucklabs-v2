@@ -71,6 +71,7 @@ export interface Subscription {
   productId: string;
   status: "ACTIVE" | "CANCELED" | "PAST_DUE" | "EXPIRED" | "TRIALING";
   currentPeriodEnd: string | null;
+  trialEndsAt: string | null;
   billingPeriod: "MONTHLY" | "ANNUAL";
   createdAt: string;
   product: Product;

@@ -27,6 +27,8 @@ import { promoCodesRoutes } from "./modules/promo-codes/promo-codes.routes.js";
 import { appUserDataRoutes } from "./modules/app-user-data/app-user-data.routes.js";
 import { unstuckDailyAiRoutes } from "./modules/unstuck-daily/ai.routes.js";
 import { pushRoutes } from "./modules/push/push.routes.js";
+import { trialRoutes } from "./modules/subscriptions/trial.routes.js";
+import { habitflowAiRoutes } from "./modules/habitflow/ai.routes.js";
 
 export async function buildApp(): Promise<FastifyInstance> {
   const app = Fastify({ logger: true });
@@ -52,6 +54,7 @@ export async function buildApp(): Promise<FastifyInstance> {
   await app.register(productsAdminRoutes);
   await app.register(subscriptionsRoutes);
   await app.register(subscriptionsAdminRoutes);
+  await app.register(trialRoutes);
   await app.register(paymentsRoutes);
   await app.register(webhooksRoutes);
   await app.register(waitlistRoutes);
@@ -65,6 +68,7 @@ export async function buildApp(): Promise<FastifyInstance> {
   await app.register(promoCodesRoutes);
   await app.register(appUserDataRoutes);
   await app.register(unstuckDailyAiRoutes);
+  await app.register(habitflowAiRoutes);
   await app.register(pushRoutes);
 
   return app;

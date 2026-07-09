@@ -1,0 +1,40 @@
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap");
+@import "tailwindcss";
+@import "../../../packages/ui/src/tokens.css";
+
+/* Tailwind v4's automatic content detection only walks from this app's own
+   root -- packages/ui's component source (Button.tsx etc.) lives outside
+   that tree, so classes only used there (bg-accent, text-on-primary, ...)
+   would otherwise never be generated. See apps/unstuck-daily/src/index.css
+   for the same fix, first found there. */
+@source "../../../packages/ui/src";
+
+/* TEMPORARY: client is trying Unstuck Daily's exact "Sky optimism" palette
+   (indigo + sunrise-yellow, DM Sans) on HabitFlow as an experiment, after
+   rejecting both "Warm Stone" and the coral revision on contrast/taste
+   grounds. Values copied verbatim from apps/unstuck-daily/src/index.css.
+   If kept, this needs its own comment explaining the (now-shared) identity
+   and would leave HabitFlow without a distinct color scheme from Unstuck
+   Daily, unlike every other app in the repo -- flag that back to the client
+   once they've seen it. --color-muted-foreground stays as the earlier
+   contrast fix: a solid secondary-text color instead of text-foreground/NN
+   opacity, independent of which base palette is active. */
+@theme {
+  --color-primary: #6366f1;
+  --color-secondary: #818cf8;
+  --color-accent: #f59e0b;
+  --color-background: #f5f5ff;
+  --color-foreground: #312e81;
+  --color-muted: #ececfe;
+  --color-muted-foreground: #64748b;
+  --color-border: #d9d9fb;
+  --color-ring: #6366f1;
+  --color-destructive: #dc2626;
+  --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+}
+
+body {
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
+}

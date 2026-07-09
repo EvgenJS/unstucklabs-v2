@@ -13,8 +13,12 @@ import { createUsersModule } from "./modules/users";
 import { createPromoCodesModule } from "./modules/promo-codes";
 export type { PromoCodeInput, PromoCodeValidation } from "./modules/promo-codes";
 import { createAppUserDataModule } from "./modules/app-user-data";
+import { createPushModule } from "./modules/push";
+export type { PushSubscriptionKeys } from "./modules/push";
 import { createUnstuckDailyModule } from "./modules/unstuck-daily";
-export type { TaskBreakdown, PushSubscriptionKeys, Resource } from "./modules/unstuck-daily";
+export type { TaskBreakdown, Resource } from "./modules/unstuck-daily";
+import { createHabitFlowModule } from "./modules/habitflow";
+export type { HabitCoachInputHabit, HabitCoachResult, RecoveryDaySuggestion } from "./modules/habitflow";
 
 export * from "./types";
 export { ApiError } from "./client";
@@ -35,7 +39,9 @@ export function createApiClient(config: ApiClientConfig) {
     users: createUsersModule(config),
     promoCodes: createPromoCodesModule(config),
     appUserData: createAppUserDataModule(config),
+    push: createPushModule(config),
     unstuckDaily: createUnstuckDailyModule(config),
+    habitflow: createHabitFlowModule(config),
   };
 }
 

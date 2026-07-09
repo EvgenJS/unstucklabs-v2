@@ -199,6 +199,75 @@ self-hosted PM2 model) — correct only when core-api runs as a single
 process. Running it in PM2 cluster mode would run one interval per worker
 and double-send reminders.
 
+## Phase 5 — Second Mini-App (HabitFlow)
+
+Same rule as Phase 4+: rewrite, not a port. v1's HabitFlow (Express+MongoDB
+backend, single-file vanilla-JS frontend, Paddle payments) contributed only
+the product concept — none of its code, freemium-tier logic, or unbounded
+completions array carried forward.
+
+- [x] Prisma: `Subscription.trialEndsAt` + migration
+- [x] core-api: generic trial-start endpoint (`POST /apps/:productSlug/trial/start`),
+      reusable by any future mini-app, not just HabitFlow
+- [x] core-api: lazy trial-expiry in `access.plugin.ts` (flips `TRIALING` →
+      `EXPIRED` on the next gated request past `trialEndsAt`, no new scheduler)
+- [x] core-api: extracted shared OpenRouter plumbing (`lib/openrouter.ts` —
+      `extractJson`/`callOpenRouter`/`retryJsonCall`) out of Unstuck Daily's
+      AI routes so HabitFlow (and future apps) reuse it instead of
+      duplicating the fetch/parse logic
+- [x] core-api: HabitFlow AI routes — `/ai/coach` (weekly consistency
+      check-in) and `/ai/recovery-day` (AI-suggested streak-preserving
+      micro-habit, server-enforced 1-use-per-habit-per-7-days guard),
+      on a cheap paid model (`nvidia/nemotron-3-ultra-550b-a55b`) rather than
+      the free tier, sidestepping the congestion problems documented in the
+      Phase 4+ Change Log
+- [x] core-api: generalized the push module — removed Unstuck-Daily-only
+      product guards from `push.routes.ts` (subscribe/unsubscribe were
+      already product-generic, the guard was vestigial); refactored
+      `push.scheduler.ts` into a per-product `ReminderStrategy` registry so
+      each app owns its own "what counts as missed" semantics
+- [x] packages/sdk: generic `push.ts` module (was hardcoded to Unstuck
+      Daily's URLs), `habitflow.ts` module, `subscriptions.startTrial()`
+- [x] Vite+React+TS+Tailwind v4+vite-plugin-pwa scaffold under
+      `apps/habitflow`, manifest `shortcuts` entry for a home-screen
+      quick-check-in affordance
+- [x] Frontend: Today (habit cards, Sunday-start calendar week grid,
+      tap-to-check-off, streak badges), Add/Edit Habit (Atomic-Habits-style
+      Action/Time/Place fields, no AI call), Stats (30-day bars, longest
+      streak, total check-ins), AI Coach (consistency ring reusing Unstuck
+      Daily's focus-timer visual language)
+- [x] Streak protection: AI-suggested recovery day only — deliberately not
+      combined with a second "streak shields" mechanic (client reviewed and
+      rejected that combination after seeing a colleague's proposal)
+- [x] Monetization: 5-day full-access free trial (no per-feature/habit
+      limits, no card required), then the existing binary
+      `requireProductAccess()` gate — no in-app freemium-tier logic to
+      maintain, unlike v1's duplicated free/Pro checks
+- [x] Push notifications on missed check-ins, plus a deterministic (non-AI)
+      day-of-week miss-rate nudge — computed as stats over the user's own
+      history, not a new AI call, since the scheduler ticks for every user
+      on every interval
+- [x] Seed: new `habitflow` Product row, priced to match Unstuck Daily
+      ($7/mo, $70/yr)
+- [x] Mini-app color scheme, revised twice after live client feedback (see
+      Change Log): the original `ui-ux-pro-max`-generated "Warm Stone"
+      direction (taupe/amber/cream) and a higher-contrast "Warm Coral"
+      revision were both rejected on readability/taste grounds. Client asked
+      to try Unstuck Daily's exact "Sky optimism" palette (indigo +
+      sunrise-yellow, DM Sans) instead — currently applied as-is, meaning
+      HabitFlow no longer has a color identity distinct from Unstuck Daily
+      (unlike every other app in the repo). Per-habit accent colors
+      (rotated from a small fixed palette at habit creation) remain layered
+      on top regardless of base palette.
+
+**Known simplification**: the day-of-week miss-rate push heuristic and the
+"today" boundary for streak/reminder logic are both computed in the
+*server's* local timezone (see `reminder-strategy.ts`'s `dateKey` comment),
+not each individual user's — acceptable for a single-timezone self-hosted
+deployment, same caveat already documented for the scheduler's
+single-process assumption; revisit only if users in materially different
+timezones report the "today" boundary landing on the wrong day for them.
+
 ## External Blocking Dependencies
 
 - **WesternBid API access**: requires opening a support ticket to obtain an API key;
@@ -221,6 +290,14 @@ and double-send reminders.
   messaging has a real destination instead of a dead-end CTA. The full
   quiz/confirmation mechanic is deferred past Phase 4 — revisit once there's
   real submission volume to justify building it.
+
+- **HabitFlow: full multi-turn AI chat coach**: a colleague's ("Gemini")
+  proposal suggested a chat-style interface with action-item buttons on top
+  of the weekly consistency check-in HabitFlow actually ships. Client
+  confirmed backlog, citing cost — unbounded chat turns conflict with the
+  deliberate "cheap paid model, not free tier" decision for HabitFlow's AI
+  calls. Revisit only if the single-shot weekly digest proves insufficient
+  in practice.
 
 ## Change Log
 
@@ -357,3 +434,67 @@ and double-send reminders.
     watermark (survives share targets that only keep the file, e.g.
     saving straight to Photos) and passed as `text`/`url` to
     `navigator.share()` for targets that auto-linkify it.
+- 2026-07-09 — Phase 5 (HabitFlow) implemented as a from-scratch rewrite and
+  verified end to end in the browser: trial start (full access, no card),
+  server-side 403 on an unauthenticated/non-trialing request, habit
+  check-off + streak display, a real AI Coach call against
+  `nvidia/nemotron-3-ultra-550b-a55b`, the recovery-day flow (CTA appears
+  on a genuine gap, AI-suggested micro-habit applies and continues the
+  streak, a second attempt within 7 days correctly 429s server-side), the
+  generalized push module (subscribe works for HabitFlow through the same
+  route Unstuck Daily uses, the refactored scheduler's per-product
+  `ReminderStrategy` correctly picks up HabitFlow subscriptions), and lazy
+  trial-expiry (`trialEndsAt` in the past flips the row to `EXPIRED` on the
+  next request and the client shows "trial has ended," correctly distinct
+  from the initial "trial available" state, since a trial was already
+  used). Re-verified Unstuck Daily's own AI task-breakdown call and
+  `SubscriptionGate` after the shared `push.routes.ts`/`push.scheduler.ts`/
+  `lib/openrouter.ts` changes — no regression.
+  - **Bug found and fixed during verification**: `dateKey()` in both
+    `apps/habitflow/src/lib/streaks.ts` and
+    `apps/core-api/src/modules/habitflow/reminder-strategy.ts` used
+    `.toISOString().slice(0,10)` (UTC-based) while the surrounding date
+    arithmetic (`setHours`, `setDate`) operates in local time. In any
+    positive-UTC-offset timezone (confirmed live in Europe/Kiev, UTC+3), a
+    local-midnight `Date` serializes via `toISOString()` to the *previous*
+    UTC calendar day, silently shifting every streak/week-grid/reminder
+    date-key lookup back by one day — reproduced live as "No streak yet"
+    immediately after checking off a habit, and the week grid highlighting
+    the wrong day as "today." Fixed by switching both to local getters
+    (`getFullYear()`/`getMonth()`/`getDate()`). A `longestStreakEver` value
+    written before the fix was briefly stale (showed "0 days" on Stats
+    despite a live 1-day streak) until the next check-off recomputed it
+    under the corrected logic — not a separate bug, just a stored value
+    computed before the fix landed.
+- 2026-07-09 — HabitFlow follow-up: separate OpenRouter API key
+  (`HABITFLOW_OPENROUTER_API_KEY`, falling back to the shared
+  `OPENROUTER_API_KEY` if unset) so HabitFlow's AI spend is tracked and
+  capped independently of Unstuck Daily's, per the client's request.
+  `callOpenRouter`/`retryJsonCall` in the shared `lib/openrouter.ts` now
+  accept an optional `apiKey` override.
+- 2026-07-09 — HabitFlow color scheme revised twice after live client
+  feedback, each round verified in the browser:
+  1. **"Warm Stone" → "Warm Coral"**: the original taupe/amber/cream
+     palette read as low-contrast — faint week-grid borders and
+     `text-foreground/NN`-opacity secondary text nearly disappeared
+     against the cream background. Re-sourced from the `ui-ux-pro-max`
+     skill's palette database under product type "Habit Tracker"
+     specifically, warmed toward coral/orange to match a reference the
+     client liked, and added a solid `--color-muted-foreground` token to
+     replace the opacity-based secondary text across every HabitFlow
+     component. Also added a per-habit accent color (rotated from a
+     small fixed palette at habit creation, not user-picked) applied to
+     the check-off circle and week-grid fills, with a backfill for habits
+     persisted before the field existed.
+  2. **"Warm Coral" also rejected** — client asked to try Unstuck Daily's
+     exact "Sky optimism" palette (indigo + sunrise-yellow, DM Sans)
+     instead, to compare directly. Applied as-is (values copied verbatim
+     from `apps/unstuck-daily/src/index.css`), keeping the
+     `--color-muted-foreground` contrast fix and per-habit accent colors
+     from step 1, which are independent of the base palette. HabitFlow
+     currently shares its color identity with Unstuck Daily rather than
+     having a distinct one — flagged in `index.css` and here for a
+     final decision, not silently treated as settled.
+  - Also fixed the bottom-nav Coach tab icon (✨ rendered too
+    light/washed-out to see against the light background) — swapped for
+    🧠, which has stronger contrast and fits "AI Coach" semantically.

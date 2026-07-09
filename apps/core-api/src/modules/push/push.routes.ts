@@ -13,17 +13,17 @@ const unsubscribeSchema = z.object({
   endpoint: z.string().url(),
 });
 
-const PRODUCT_SLUG = "unstuck-daily";
-
+// Push subscribe/unsubscribe have no product-specific business logic --
+// requireProductAccess() already generically resolves and validates
+// request.product, so these routes work for any app without a per-product
+// slug guard (unlike the AI routes, whose system prompts/models are
+// legitimately per-app).
 export async function pushRoutes(fastify: FastifyInstance) {
   fastify.register(async (instance) => {
     instance.addHook("preHandler", instance.authenticate);
     instance.addHook("preHandler", instance.requireProductAccess());
 
     instance.post("/apps/:productSlug/push/subscribe", async (request, reply) => {
-      if (request.product!.slug !== PRODUCT_SLUG) {
-        return reply.code(404).send({ error: "Unknown app" });
-      }
       const body = subscribeSchema.parse(request.body);
       const userAgent = request.headers["user-agent"];
 
@@ -49,9 +49,6 @@ export async function pushRoutes(fastify: FastifyInstance) {
     });
 
     instance.delete("/apps/:productSlug/push/subscribe", async (request, reply) => {
-      if (request.product!.slug !== PRODUCT_SLUG) {
-        return reply.code(404).send({ error: "Unknown app" });
-      }
       const body = unsubscribeSchema.parse(request.body);
       await instance.prisma.pushSubscription.deleteMany({
         where: { endpoint: body.endpoint, userId: request.user!.id },
