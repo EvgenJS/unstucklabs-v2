@@ -108,7 +108,7 @@ function AppContent() {
 const TABS: Array<{ key: Screen; label: string; icon: string }> = [
   { key: "today", label: "Today", icon: "✓" },
   { key: "stats", label: "Stats", icon: "\u{1F4CA}" },
-  { key: "coach", label: "Coach", icon: "✨" },
+  { key: "coach", label: "Coach", icon: "\u{1F9E0}" },
 ];
 
 function BottomNav({ screen, onNavigate }: { screen: Screen; onNavigate: (s: Screen) => void }) {

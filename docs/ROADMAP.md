@@ -249,9 +249,16 @@ completions array carried forward.
       on every interval
 - [x] Seed: new `habitflow` Product row, priced to match Unstuck Daily
       ($7/mo, $70/yr)
-- [x] Distinct mini-app color scheme via the `ui-ux-pro-max` skill — "Warm
-      Stone" (taupe primary, amber accent, cream background, Nunito Sans),
-      chosen by the client from 5 generated candidate directions
+- [x] Mini-app color scheme, revised twice after live client feedback (see
+      Change Log): the original `ui-ux-pro-max`-generated "Warm Stone"
+      direction (taupe/amber/cream) and a higher-contrast "Warm Coral"
+      revision were both rejected on readability/taste grounds. Client asked
+      to try Unstuck Daily's exact "Sky optimism" palette (indigo +
+      sunrise-yellow, DM Sans) instead — currently applied as-is, meaning
+      HabitFlow no longer has a color identity distinct from Unstuck Daily
+      (unlike every other app in the repo). Per-habit accent colors
+      (rotated from a small fixed palette at habit creation) remain layered
+      on top regardless of base palette.
 
 **Known simplification**: the day-of-week miss-rate push heuristic and the
 "today" boundary for streak/reminder logic are both computed in the
@@ -459,3 +466,35 @@ timezones report the "today" boundary landing on the wrong day for them.
     despite a live 1-day streak) until the next check-off recomputed it
     under the corrected logic — not a separate bug, just a stored value
     computed before the fix landed.
+- 2026-07-09 — HabitFlow follow-up: separate OpenRouter API key
+  (`HABITFLOW_OPENROUTER_API_KEY`, falling back to the shared
+  `OPENROUTER_API_KEY` if unset) so HabitFlow's AI spend is tracked and
+  capped independently of Unstuck Daily's, per the client's request.
+  `callOpenRouter`/`retryJsonCall` in the shared `lib/openrouter.ts` now
+  accept an optional `apiKey` override.
+- 2026-07-09 — HabitFlow color scheme revised twice after live client
+  feedback, each round verified in the browser:
+  1. **"Warm Stone" → "Warm Coral"**: the original taupe/amber/cream
+     palette read as low-contrast — faint week-grid borders and
+     `text-foreground/NN`-opacity secondary text nearly disappeared
+     against the cream background. Re-sourced from the `ui-ux-pro-max`
+     skill's palette database under product type "Habit Tracker"
+     specifically, warmed toward coral/orange to match a reference the
+     client liked, and added a solid `--color-muted-foreground` token to
+     replace the opacity-based secondary text across every HabitFlow
+     component. Also added a per-habit accent color (rotated from a
+     small fixed palette at habit creation, not user-picked) applied to
+     the check-off circle and week-grid fills, with a backfill for habits
+     persisted before the field existed.
+  2. **"Warm Coral" also rejected** — client asked to try Unstuck Daily's
+     exact "Sky optimism" palette (indigo + sunrise-yellow, DM Sans)
+     instead, to compare directly. Applied as-is (values copied verbatim
+     from `apps/unstuck-daily/src/index.css`), keeping the
+     `--color-muted-foreground` contrast fix and per-habit accent colors
+     from step 1, which are independent of the base palette. HabitFlow
+     currently shares its color identity with Unstuck Daily rather than
+     having a distinct one — flagged in `index.css` and here for a
+     final decision, not silently treated as settled.
+  - Also fixed the bottom-nav Coach tab icon (✨ rendered too
+    light/washed-out to see against the light background) — swapped for
+    🧠, which has stronger contrast and fits "AI Coach" semantically.
