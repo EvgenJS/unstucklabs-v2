@@ -4,7 +4,18 @@ import { useState, type FormEvent } from "react";
 import { Button, Input } from "@unstucklabs/ui";
 import { getApiClient } from "../lib/api";
 
-export function WaitlistForm({ source, className = "" }: { source: string; className?: string }) {
+interface WaitlistFormProps {
+  source: string;
+  className?: string;
+  // "row" (default) puts the input and button side by side at the `sm`
+  // breakpoint -- fine in wide contexts (hero, centered CTA), but inside a
+  // narrow footer grid column it squeezes the email input down to a few
+  // visible characters. "stacked" keeps input and button on separate lines
+  // at every width.
+  layout?: "row" | "stacked";
+}
+
+export function WaitlistForm({ source, className = "", layout = "row" }: WaitlistFormProps) {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
 
@@ -26,7 +37,7 @@ export function WaitlistForm({ source, className = "" }: { source: string; class
 
   return (
     <div className={className}>
-      <form onSubmit={handleSubmit} className="flex flex-col gap-3 sm:flex-row">
+      <form onSubmit={handleSubmit} className={`flex flex-col gap-3 ${layout === "row" ? "sm:flex-row" : ""}`}>
         <label htmlFor={`waitlist-email-${source}`} className="sr-only">
           Email address
         </label>
@@ -37,7 +48,7 @@ export function WaitlistForm({ source, className = "" }: { source: string; class
           placeholder="you@example.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="sm:flex-1"
+          className={layout === "row" ? "sm:flex-1" : ""}
         />
         <Button type="submit" disabled={status === "loading"}>
           {status === "loading" ? "Joining…" : "Join the waitlist"}

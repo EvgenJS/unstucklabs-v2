@@ -59,7 +59,7 @@ export function Footer() {
           <div>
             <p className="text-sm font-semibold text-foreground">Stay in the loop</p>
             <p className="mt-2 text-sm text-foreground/70">Get notified when new tools ship.</p>
-            <WaitlistForm source="newsletter:footer" className="mt-3" />
+            <WaitlistForm source="newsletter:footer" className="mt-3" layout="stacked" />
           </div>
         </div>
         <p className="mt-10 text-xs text-foreground/50">

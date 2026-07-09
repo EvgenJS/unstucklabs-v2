@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { Card } from "@unstucklabs/ui";
 import type { Product } from "@unstucklabs/sdk";
 import { getApiClient } from "../../lib/api";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
 
 export async function AppPreview() {
   let products: Product[] = [];
@@ -26,14 +27,29 @@ export async function AppPreview() {
         <p className="mt-6 text-foreground/70">More tools are on the way — join the waitlist above to hear first.</p>
       ) : (
         <div className="mt-6 grid gap-6 sm:grid-cols-2">
-          {products.map((product) => (
-            <Link key={product.id} href={`/apps/${product.slug}`}>
-              <Card>
-                <h3 className="font-semibold text-foreground">{product.name}</h3>
-                <p className="mt-2 text-sm text-foreground/70">{product.description}</p>
-              </Card>
-            </Link>
-          ))}
+          {products.map((product) => {
+            const cover = product.media?.find((item) => item.type === "IMAGE");
+            return (
+              <Link
+                key={product.id}
+                href={`/apps/${product.slug}`}
+                className="block overflow-hidden rounded-xl bg-white shadow-md transition-shadow duration-200 ease-out hover:shadow-lg"
+              >
+                {cover && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={`${API_URL}${cover.url}`}
+                    alt={`${product.name} cover`}
+                    className="h-40 w-full object-cover"
+                  />
+                )}
+                <div className="p-6">
+                  <h3 className="font-semibold text-foreground">{product.name}</h3>
+                  <p className="mt-2 text-sm text-foreground/70">{product.description}</p>
+                </div>
+              </Link>
+            );
+          })}
         </div>
       )}
     </section>
