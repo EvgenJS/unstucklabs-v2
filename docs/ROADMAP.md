@@ -310,3 +310,50 @@ and double-send reminders.
   optimism" — indigo + sunrise-yellow accent, DM Sans) was chosen by the
   client from 5 candidate directions generated via the `ui-ux-pro-max`
   skill and presented as an interactive visual comparison, not assumed.
+- 2026-07-09 — Phase 4+ follow-up fixes and small features, found via the
+  client actually using the deployed app, then merged (PR #9):
+  - **AI reliability**: `openrouter/free`'s auto-router was observed
+    returning 429 on every retry when the whole free pool was congested.
+    Added a model fallback chain (`buildAttemptPlan`): retry the free
+    auto-router twice, then a named free model
+    (`nvidia/nemotron-3-ultra-550b-a55b:free` — requires the account's
+    OpenRouter privacy settings to allow free-tier providers, or it 404s
+    and is silently skipped), then the same model paid as a last resort
+    (`OPENROUTER_PAID_FALLBACK_MODEL`, ~$0.00004/call) so the AI coach
+    essentially never hard-fails.
+  - **Crash + silent data loss on completing the last subtask**: two
+    compounding bugs. `completeSubtask()` called `setNewlyUnlocked()` from
+    inside `setData`'s functional updater, which React disallows and
+    which crashed the whole tree with no error boundary to catch it
+    (blank white screen). Separately, `flush()` was called synchronously
+    right after `update()`, but `update()` relied on `setData`'s
+    functional-updater form, which React doesn't invoke until after the
+    event handler returns — so `flush()` always shipped the *pre-update*
+    snapshot to the server and cancelled the debounced write that would
+    have sent the correct one, silently dropping the final completion.
+    Fixed by computing next state synchronously against a ref in
+    `update()` and moving the achievement-unlock `setState` out of the
+    updater; also added a top-level `ErrorBoundary` so a future uncaught
+    error shows a recoverable message instead of a dead blank screen.
+    Reproduced the exact reported crash live before fixing it, then
+    verified a full task completes and survives a reload.
+  - **Optional per-subtask resource finder**: a "Find resources for this
+    step" button (explicitly opt-in per the client's request, not
+    automatic per subtask) using OpenRouter's web-search plugin, which
+    costs real money per call regardless of the model's own price — gets
+    its own daily cap (`UNSTUCK_DAILY_RESOURCES_DAILY_CAP`) separate from
+    the main AI cap. Reads real source URLs straight out of the response's
+    `annotations` (`url_citation`) rather than asking the model to author
+    a JSON list in its own text, sidestepping the reasoning-token-
+    exhaustion failure mode entirely.
+  - **UI polish**: `TaskInput` had no way to reach History (only reachable
+    from an in-progress task); `BreakdownView`'s and `FocusView`'s primary
+    buttons were left-aligned instead of centered (missing
+    `justify-center`/`items-center` on their flex rows); the resources
+    link was inline beside the primary CTA instead of below it and didn't
+    stand out visually — given a 🔎 icon and accent color.
+  - **Share-card promo link**: the completion share card now promotes
+    `unstucklabs.store`, baked into the canvas image itself as a subtle
+    watermark (survives share targets that only keep the file, e.g.
+    saving straight to Photos) and passed as `text`/`url` to
+    `navigator.share()` for targets that auto-linkify it.
