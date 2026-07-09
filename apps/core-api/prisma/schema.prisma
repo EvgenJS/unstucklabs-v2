@@ -165,6 +165,7 @@ model Subscription {
   providerTransactionId  String?
   currentPeriodEnd       DateTime? // null for one-time purchases
   billingPeriod          BillingPeriod      @default(MONTHLY) // unused/ignored for ONE_TIME products
+  trialEndsAt            DateTime? // only meaningful while status == TRIALING; orthogonal to currentPeriodEnd
   createdAt              DateTime           @default(now())
   updatedAt              DateTime           @updatedAt
 

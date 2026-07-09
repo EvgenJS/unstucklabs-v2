@@ -28,8 +28,21 @@ export const productAccessPlugin = fp(async (fastify: FastifyInstance) => {
       const subscription = await fastify.prisma.subscription.findUnique({
         where: { userId_productId: { userId: request.user.id, productId: product.id } },
       });
-      if (subscription && (subscription.status === "ACTIVE" || subscription.status === "TRIALING")) {
-        return;
+
+      if (subscription) {
+        if (subscription.status === "ACTIVE") return;
+        if (subscription.status === "TRIALING") {
+          if (!subscription.trialEndsAt || subscription.trialEndsAt > new Date()) return;
+          // Trial lapsed -- lazily flip to EXPIRED so subsequent reads
+          // (admin subscriptions list, /me/subscriptions) reflect it
+          // without a separate scheduler. access.plugin.ts already
+          // re-fetches this row on every gated request, so this is one
+          // extra comparison, not an extra round-trip.
+          await fastify.prisma.subscription.update({
+            where: { id: subscription.id },
+            data: { status: "EXPIRED" },
+          });
+        }
       }
 
       return reply.code(403).send({ error: "This app requires an active subscription." });

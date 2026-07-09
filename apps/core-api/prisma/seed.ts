@@ -22,6 +22,22 @@ async function main() {
     update: {},
   });
 
+  await prisma.product.upsert({
+    where: { slug: "habitflow" },
+    create: {
+      slug: "habitflow",
+      name: "HabitFlow",
+      subdomain: "habitflow",
+      description: "Build habits that stick, with an AI coach in your corner.",
+      pricingModel: "RECURRING",
+      priceCents: 700,
+      annualPriceCents: 7000, // matches Unstuck Daily's pricing as a starting point
+      currency: "USD",
+      isActive: true,
+    },
+    update: {},
+  });
+
   const adminEmail = process.env.SEED_ADMIN_EMAIL ?? "admin@unstucklabs.com";
   const adminPassword = process.env.SEED_ADMIN_PASSWORD ?? "change-me-please";
 
@@ -84,7 +100,7 @@ async function main() {
     update: {},
   });
 
-  console.log(`Seeded product "${product.slug}", admin user "${admin.email}" (OWNER), and 3 blog posts (2 published, 1 draft).`);
+  console.log(`Seeded products "${product.slug}" + "habitflow", admin user "${admin.email}" (OWNER), and 3 blog posts (2 published, 1 draft).`);
 }
 
 main()

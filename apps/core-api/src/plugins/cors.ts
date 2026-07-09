@@ -9,6 +9,7 @@ const DEFAULT_DEV_ORIGINS = [
   "http://localhost:3000",
   "http://localhost:3002",
   "http://localhost:5173",
+  "http://localhost:5174",
 ];
 
 export const corsPlugin = fp(async (fastify: FastifyInstance) => {

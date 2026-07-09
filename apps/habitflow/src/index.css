@@ -1,0 +1,42 @@
+@import url("https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600;700&display=swap");
+@import "tailwindcss";
+@import "../../../packages/ui/src/tokens.css";
+
+/* Tailwind v4's automatic content detection only walks from this app's own
+   root -- packages/ui's component source (Button.tsx etc.) lives outside
+   that tree, so classes only used there (bg-accent, text-on-primary, ...)
+   would otherwise never be generated. See apps/unstuck-daily/src/index.css
+   for the same fix, first found there. */
+@source "../../../packages/ui/src";
+
+/* "Warm stone" -- taupe primary + amber accent, Nunito Sans. Chosen by the
+   client from 5 candidate directions generated via the ui-ux-pro-max skill
+   (sourced from its real palette database, product type "Book & Reading
+   Tracker" as the closest muted/grounded match) and presented as an
+   interactive visual comparison. Muted and grounded rather than saturated --
+   reads as a quiet-confidence habit tool, not a game. Deliberately distinct
+   from Store's teal/orange/Plus Jakarta Sans and Unstuck Daily's
+   indigo/sunrise-yellow/DM Sans identities (see docs/ROADMAP.md Phase 5).
+   Font pairing is "Soft Rounded" (Varela Round + Nunito Sans) from the
+   skill's typography database; using Nunito Sans alone for --font-sans to
+   match the established single-font-per-app convention (Store, Unstuck
+   Daily) rather than introducing a heading/body split not yet wired into
+   packages/ui's components. */
+@theme {
+  --color-primary: #78716c;
+  --color-secondary: #a8a29e;
+  --color-accent: #d97706;
+  --color-background: #fffbeb;
+  --color-foreground: #292524;
+  --color-muted: #f5f0e8;
+  --color-border: #e7e0d4;
+  --color-ring: #78716c;
+  --color-destructive: #dc2626;
+  --font-sans: "Nunito Sans", ui-sans-serif, system-ui, sans-serif;
+}
+
+body {
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
+}

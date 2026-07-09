@@ -1,6 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import type { Prisma } from "@prisma/client";
 import { z } from "zod";
+import { retryJsonCall } from "../../lib/openrouter.js";
 
 const splitTaskSchema = z.object({
   taskTitle: z.string().min(1).max(500),
@@ -76,58 +77,6 @@ function buildAttemptPlan(): string[] {
   if (freeFallback && freeFallback !== primary) plan.push(freeFallback);
   if (paidFallback) plan.push(paidFallback);
   return plan;
-}
-
-function extractJson(text: string): unknown {
-  const match = text.match(/\{[\s\S]*\}/);
-  if (!match) throw new Error("No JSON object found in model response");
-  return JSON.parse(match[0]);
-}
-
-async function callOpenRouter(model: string, userMessage: string): Promise<unknown> {
-  const apiKey = process.env.OPENROUTER_API_KEY;
-  if (!apiKey) {
-    throw new Error("OPENROUTER_API_KEY not configured");
-  }
-
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 30_000);
-
-  try {
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model,
-        // Generous headroom: openrouter/free can route to a reasoning model
-        // that spends its token budget on a visible "reasoning" chain before
-        // ever writing the final JSON -- observed a 500-token budget getting
-        // fully consumed by reasoning alone (finish_reason: "length",
-        // content: null) during testing. 1200 leaves room for both.
-        max_tokens: 1200,
-        temperature: 0.4,
-        messages: [
-          { role: "system", content: SYSTEM_PROMPT },
-          { role: "user", content: userMessage },
-        ],
-      }),
-      signal: controller.signal,
-    });
-
-    if (!response.ok) {
-      throw new Error(`OpenRouter request failed: ${response.status}`);
-    }
-
-    const payload = (await response.json()) as { choices?: Array<{ message?: { content?: string } }> };
-    const content = payload.choices?.[0]?.message?.content;
-    if (!content) throw new Error("Empty response from OpenRouter");
-    return extractJson(content);
-  } finally {
-    clearTimeout(timeout);
-  }
 }
 
 // Grounds the model with a real web search via OpenRouter's built-in "web"
@@ -241,29 +190,13 @@ export async function unstuckDailyAiRoutes(fastify: FastifyInstance) {
       // models (see buildAttemptPlan) with a short backoff between tries
       // rather than failing the user's very first attempt.
       const attemptPlan = buildAttemptPlan();
-      let parsed: z.infer<typeof aiResponseSchema> | undefined;
-      let lastError: unknown;
-      let succeededModel: string | undefined;
-
-      for (let i = 0; i < attemptPlan.length; i++) {
-        const model = attemptPlan[i]!;
-        try {
-          const message = i === 0 ? userMessage : `${userMessage}\n\n${JSON_ONLY_REMINDER}`;
-          const raw = await callOpenRouter(model, message);
-          const result = aiResponseSchema.safeParse(raw);
-          if (result.success) {
-            parsed = result.data;
-            succeededModel = model;
-            break;
-          }
-          lastError = result.error;
-        } catch (err) {
-          lastError = err;
-        }
-        if (i < attemptPlan.length - 1) {
-          await new Promise((resolve) => setTimeout(resolve, 1000));
-        }
-      }
+      const { parsed, succeededModel, lastError } = await retryJsonCall(
+        attemptPlan,
+        SYSTEM_PROMPT,
+        userMessage,
+        aiResponseSchema,
+        { jsonOnlyReminder: JSON_ONLY_REMINDER }
+      );
 
       if (!parsed) {
         request.log.error({ err: lastError, attemptPlan }, `AI call failed after ${attemptPlan.length} attempts`);
