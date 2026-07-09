@@ -3,14 +3,19 @@ import { Button } from "@unstucklabs/ui";
 import { useAuth } from "../lib/auth-context";
 import { getApiClient, STORE_URL, PRODUCT_SLUG } from "../lib/api";
 
-type AccessState = "checking" | "granted" | "no-account" | "no-subscription";
+type AccessState = "checking" | "granted" | "no-account" | "trial-available" | "no-subscription";
 
 // UX-only gate -- checks subscriptions.mine() client-side for a fast,
 // friendly redirect. The real enforcement is server-side: every core-api
 // route this app calls (AppUserData, AI, push) independently runs
 // requireProductAccess() and 403s a request from an unsubscribed user
 // regardless of what this component decides. Same "don't trust the
-// client" principle CLAUDE.md already applies to RBAC.
+// client" principle CLAUDE.md already applies to RBAC. Mirrors
+// apps/habitflow/src/components/SubscriptionGate.tsx's `trial-available`
+// state -- Unstuck Daily originally shipped with no free tier at all, but
+// picked up the same 5-day full-access trial mechanism the product-agnostic
+// `POST /apps/:productSlug/trial/start` endpoint was already built to
+// support (see docs/ROADMAP.md Change Log).
 //
 // Note: we can't send the user to Store's /login with a `redirect` back to
 // this app's own origin -- Store's login page does `router.push(redirect)`
@@ -32,9 +37,16 @@ export function SubscriptionGate({ children }: { children: ReactNode }) {
     getApiClient(accessToken ?? undefined)
       .subscriptions.mine()
       .then(({ subscriptions }) => {
-        const active = subscriptions.some(
-          (sub) => sub.product.slug === PRODUCT_SLUG && (sub.status === "ACTIVE" || sub.status === "TRIALING")
-        );
+        const sub = subscriptions.find((s) => s.product.slug === PRODUCT_SLUG);
+        if (!sub) {
+          // No Subscription row at all for this product yet -- the trial
+          // hasn't been used. POST /trial/start independently re-derives
+          // and 409s on a second attempt, so this client-side read being
+          // stale can never actually grant a second trial.
+          setAccess("trial-available");
+          return;
+        }
+        const active = sub.status === "ACTIVE" || sub.status === "TRIALING";
         setAccess(active ? "granted" : "no-subscription");
       })
       .catch(() => setAccess("no-subscription"));
@@ -45,11 +57,12 @@ export function SubscriptionGate({ children }: { children: ReactNode }) {
     check();
   }, [loading, check]);
 
-  async function handleRecheck() {
+  // AuthProvider only refreshes on mount -- force a full reload so it
+  // re-runs auth.refresh() against the (possibly now-set) cookie, then the
+  // effect above re-checks subscription state. Also used after a
+  // successful trial start, for the same reason.
+  function handleRecheck() {
     setRecheckPending(true);
-    // AuthProvider only refreshes on mount -- force a full reload so it
-    // re-runs auth.refresh() against the (possibly now-set) cookie, then
-    // the effect above re-checks subscription state.
     window.location.reload();
   }
 
@@ -74,11 +87,15 @@ export function SubscriptionGate({ children }: { children: ReactNode }) {
     );
   }
 
+  if (access === "trial-available") {
+    return <TrialScreen accessToken={accessToken ?? undefined} onStarted={handleRecheck} pending={recheckPending} />;
+  }
+
   if (access === "no-subscription") {
     return (
       <GateScreen
         title="Unstuck Daily needs an active subscription"
-        body="One task at a time, with an AI coach that actually breaks things down for you. Subscribe on the store, then come back here."
+        body="Your free trial has ended. Subscribe on the store to keep breaking tasks down, then come back here."
         ctaLabel="View pricing"
         ctaHref={`${STORE_URL}/apps/${PRODUCT_SLUG}`}
         onRecheck={handleRecheck}
@@ -88,6 +105,44 @@ export function SubscriptionGate({ children }: { children: ReactNode }) {
   }
 
   return <>{children}</>;
+}
+
+function TrialScreen({
+  accessToken,
+  onStarted,
+  pending,
+}: {
+  accessToken: string | undefined;
+  onStarted: () => void;
+  pending: boolean;
+}) {
+  const [status, setStatus] = useState<"idle" | "starting" | "error">("idle");
+
+  async function handleStart() {
+    setStatus("starting");
+    try {
+      await getApiClient(accessToken).subscriptions.startTrial(PRODUCT_SLUG);
+      onStarted();
+    } catch {
+      setStatus("error");
+    }
+  }
+
+  return (
+    <div className="flex min-h-dvh flex-col items-center justify-center gap-4 px-6 text-center">
+      <h1 className="text-2xl font-bold text-foreground">Starting is the hard part</h1>
+      <p className="max-w-sm text-foreground/70">
+        Start your 5 days free -- full access, no card needed. AI task breakdown, the focus timer, everything,
+        unlocked from day one.
+      </p>
+      <Button onClick={handleStart} disabled={status === "starting" || pending}>
+        {status === "starting" ? "Starting…" : "Start your 5 days free"}
+      </Button>
+      {status === "error" && (
+        <p className="text-sm text-destructive">Something went wrong -- try again in a moment.</p>
+      )}
+    </div>
+  );
 }
 
 function GateScreen({

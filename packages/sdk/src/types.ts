@@ -16,6 +16,7 @@ export interface Product {
   slug: string;
   name: string;
   subdomain: string | null;
+  tagline: string | null;
   description: string | null;
   pricingModel: "ONE_TIME" | "RECURRING" | "FREEMIUM";
   priceCents: number;

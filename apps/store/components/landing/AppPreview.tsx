@@ -4,6 +4,11 @@ import { getApiClient } from "../../lib/api";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
 
+// Matches the 3:2 aspect ratio the marketing banners are generated at
+// (2528x1696) -- keeps the whole banner visible (headline, tagline, CTA)
+// instead of cropping it into a short rectangle.
+const COVER_ASPECT = "aspect-[3/2]";
+
 export async function AppPreview() {
   let products: Product[] = [];
 
@@ -40,12 +45,11 @@ export async function AppPreview() {
                   <img
                     src={`${API_URL}${cover.url}`}
                     alt={`${product.name} cover`}
-                    className="h-40 w-full object-cover"
+                    className={`${COVER_ASPECT} w-full object-cover`}
                   />
                 )}
-                <div className="p-6">
-                  <h3 className="font-semibold text-foreground">{product.name}</h3>
-                  <p className="mt-2 text-sm text-foreground/70">{product.description}</p>
+                <div className="p-4">
+                  <h3 className="text-center font-semibold text-foreground">{product.name}</h3>
                 </div>
               </Link>
             );

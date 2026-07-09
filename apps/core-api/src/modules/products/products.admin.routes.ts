@@ -5,6 +5,7 @@ const createProductSchema = z.object({
   slug: z.string().min(1),
   name: z.string().min(1),
   subdomain: z.string().min(1).optional(),
+  tagline: z.string().optional(),
   description: z.string().optional(),
   pricingModel: z.enum(["ONE_TIME", "RECURRING", "FREEMIUM"]),
   priceCents: z.number().int().nonnegative(),

@@ -10,15 +10,15 @@ export const dynamic = "force-dynamic";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
 
+// Matches the 3:2 aspect ratio the marketing banners are generated at
+// (2528x1696) -- keeps the whole banner visible (headline, tagline, CTA)
+// instead of cropping it into a short rectangle.
+const COVER_ASPECT = "aspect-[3/2]";
+
 export const metadata: Metadata = {
   title: "Apps",
   description: "Browse every UnstuckLabs tool — small, focused, and sold on its own.",
 };
-
-function formatPrice(priceCents: number, currency: string, pricingModel: string) {
-  const amount = (priceCents / 100).toLocaleString("en-US", { style: "currency", currency });
-  return pricingModel === "RECURRING" ? `${amount}/mo` : amount;
-}
 
 export default async function AppsPage() {
   const { products } = await getApiClient().products.list();
@@ -45,15 +45,13 @@ export default async function AppsPage() {
                   <img
                     src={`${API_URL}${cover.url}`}
                     alt={`${product.name} cover`}
-                    className="h-40 w-full object-cover"
+                    className={`${COVER_ASPECT} w-full object-cover`}
                   />
                 )}
                 <div className="flex flex-1 flex-col p-6">
                   <h2 className="font-semibold text-foreground">{product.name}</h2>
-                  <p className="mt-2 flex-1 text-sm text-foreground/70">{product.description}</p>
-                  <p className="mt-4 font-semibold text-primary">
-                    {formatPrice(product.priceCents, product.currency, product.pricingModel)}
-                  </p>
+                  <p className="mt-2 flex-1 text-sm text-foreground/70">{product.tagline}</p>
+                  <p className="mt-4 font-semibold text-primary">Free Trial</p>
                 </div>
               </Link>
             );
