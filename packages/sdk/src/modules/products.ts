@@ -5,6 +5,7 @@ export interface ProductInput {
   slug: string;
   name: string;
   subdomain?: string;
+  tagline?: string;
   description?: string;
   pricingModel: "ONE_TIME" | "RECURRING" | "FREEMIUM";
   priceCents: number;

@@ -14,6 +14,7 @@ export function ProductForm({ initial, onSubmit, onCancel }: Props) {
   const [slug, setSlug] = useState(initial?.slug ?? "");
   const [name, setName] = useState(initial?.name ?? "");
   const [subdomain, setSubdomain] = useState(initial?.subdomain ?? "");
+  const [tagline, setTagline] = useState(initial?.tagline ?? "");
   const [description, setDescription] = useState(initial?.description ?? "");
   const [pricingModel, setPricingModel] = useState<ProductInput["pricingModel"]>(
     initial?.pricingModel ?? "ONE_TIME"
@@ -34,6 +35,7 @@ export function ProductForm({ initial, onSubmit, onCancel }: Props) {
         slug,
         name,
         subdomain: subdomain || undefined,
+        tagline: tagline || undefined,
         description: description || undefined,
         pricingModel,
         priceCents: Math.round(Number(priceCents) * 100),
@@ -95,11 +97,19 @@ export function ProductForm({ initial, onSubmit, onCancel }: Props) {
         </div>
       </div>
       <div>
-        <label className="mb-1 block text-sm font-medium text-foreground">Description</label>
+        <label className="mb-1 block text-sm font-medium text-foreground">
+          Tagline <span className="font-normal text-foreground/50">(short, shown on catalog/teaser cards)</span>
+        </label>
+        <Input value={tagline} onChange={(e) => setTagline(e.target.value)} placeholder="An app for…" />
+      </div>
+      <div>
+        <label className="mb-1 block text-sm font-medium text-foreground">
+          Description <span className="font-normal text-foreground/50">(long-form, markdown, product page)</span>
+        </label>
         <textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          rows={3}
+          rows={10}
           className="w-full rounded-lg border border-border px-4 py-3 text-base focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
         />
       </div>

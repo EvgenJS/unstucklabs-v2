@@ -498,3 +498,12 @@ timezones report the "today" boundary landing on the wrong day for them.
   - Also fixed the bottom-nav Coach tab icon (✨ rendered too
     light/washed-out to see against the light background) — swapped for
     🧠, which has stronger contrast and fits "AI Coach" semantically.
+- 2026-07-09 — Unstuck Daily's original "no free tier, subscription only"
+  decision (Phase 4+) reversed: the client asked for the same 5-day
+  full-access free trial HabitFlow already has. No backend change was
+  needed — `POST /apps/:productSlug/trial/start` was already built
+  product-agnostic during Phase 5 specifically so future apps could reuse
+  it. Ported HabitFlow's `SubscriptionGate.tsx` `trial-available` state
+  (and its `TrialScreen`) into `apps/unstuck-daily`, with Unstuck-Daily-
+  specific copy. Verified the existing demo account's `ACTIVE` subscription
+  still grants access unaffected by the added state.

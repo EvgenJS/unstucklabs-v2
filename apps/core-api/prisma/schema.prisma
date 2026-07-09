@@ -79,6 +79,7 @@ model Product {
   slug             String       @unique
   name             String
   subdomain        String?      @unique
+  tagline          String? // short one-liner for catalog/teaser cards -- description is long-form markdown for the product detail page
   description      String?
   pricingModel     PricingModel
   priceCents       Int
