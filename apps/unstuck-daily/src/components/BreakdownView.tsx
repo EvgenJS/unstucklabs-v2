@@ -31,7 +31,7 @@ export function BreakdownView({ title, breakdown, onStart, onBack }: Props) {
         </ol>
       </Card>
 
-      <div className="mt-6 flex gap-3">
+      <div className="mt-6 flex justify-center gap-3">
         <Button onClick={onStart}>Start with step 1</Button>
         <Button variant="secondary" onClick={onBack}>
           Try again

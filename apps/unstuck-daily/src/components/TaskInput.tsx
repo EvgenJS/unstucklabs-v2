@@ -7,9 +7,10 @@ import { useAuth } from "../lib/auth-context";
 
 interface Props {
   onBreakdown: (title: string, brainDump: string | undefined, breakdown: TaskBreakdown) => void;
+  onViewHistory: () => void;
 }
 
-export function TaskInput({ onBreakdown }: Props) {
+export function TaskInput({ onBreakdown, onViewHistory }: Props) {
   const { accessToken } = useAuth();
   const [brainDump, setBrainDump] = useState("");
   const [title, setTitle] = useState("");
@@ -39,7 +40,16 @@ export function TaskInput({ onBreakdown }: Props) {
 
   return (
     <div className="mx-auto flex min-h-dvh max-w-lg flex-col justify-center px-6 py-16">
-      <h1 className="text-3xl font-bold text-foreground">What's the one big thing?</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-bold text-foreground">What's the one big thing?</h1>
+        <button
+          type="button"
+          onClick={onViewHistory}
+          className="cursor-pointer whitespace-nowrap text-sm text-foreground/50 hover:text-foreground"
+        >
+          History
+        </button>
+      </div>
       <p className="mt-2 text-foreground/70">
         Paste the task that's been sitting there. We'll break it into steps small enough to actually start.
       </p>

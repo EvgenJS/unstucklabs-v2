@@ -62,8 +62,9 @@ function FindResources({ subtaskTitle, taskTitle }: { subtaskTitle: string; task
       type="button"
       onClick={handleClick}
       disabled={state === "loading"}
-      className="mt-4 cursor-pointer text-sm text-foreground/50 hover:text-foreground disabled:cursor-wait"
+      className="mt-4 inline-flex cursor-pointer items-center gap-1.5 text-sm font-medium text-accent hover:text-accent/80 disabled:cursor-wait"
     >
+      <span aria-hidden="true">🔎</span>
       {state === "loading"
         ? "Looking…"
         : state === "error"
@@ -107,10 +108,10 @@ export function FocusView({ task, onCompleteSubtask, onAbandon, onViewHistory }:
             className="mt-10 w-full"
           >
             <p className="text-xl font-semibold text-foreground">{nextSubtask.title}</p>
-            <Button className="mt-6" onClick={() => onCompleteSubtask(nextSubtask.id)}>
-              Done, next step
-            </Button>
-            <FindResources key={nextSubtask.id} subtaskTitle={nextSubtask.title} taskTitle={task.title} />
+            <div className="mt-6 flex flex-col items-center">
+              <Button onClick={() => onCompleteSubtask(nextSubtask.id)}>Done, next step</Button>
+              <FindResources key={nextSubtask.id} subtaskTitle={nextSubtask.title} taskTitle={task.title} />
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

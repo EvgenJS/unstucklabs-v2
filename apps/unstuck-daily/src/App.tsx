@@ -79,7 +79,9 @@ function AppContent() {
   return (
     <>
       <PushPermissionBanner />
-      {screen === "input" && <TaskInput onBreakdown={handleBreakdown} />}
+      {screen === "input" && (
+        <TaskInput onBreakdown={handleBreakdown} onViewHistory={() => setScreen("history")} />
+      )}
       {screen === "breakdown" && pending && (
         <BreakdownView
           title={pending.title}
