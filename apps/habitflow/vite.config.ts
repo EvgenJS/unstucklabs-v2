@@ -18,7 +18,7 @@ export default defineConfig({
         description: "Build habits that stick, with an AI coach in your corner.",
         display: "standalone",
         start_url: "/",
-        theme_color: "#78716C",
+        theme_color: "#EA580C",
         background_color: "#FFFBEB",
         icons: [
           { src: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },

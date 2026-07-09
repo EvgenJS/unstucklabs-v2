@@ -56,17 +56,17 @@ export function CoachView({ habits, completions, accessToken, onBack }: Props) {
       <button
         type="button"
         onClick={onBack}
-        className="cursor-pointer self-start text-sm text-foreground/50 hover:text-foreground"
+        className="cursor-pointer self-start text-sm text-muted-foreground hover:text-foreground"
       >
         ← Back
       </button>
       <h1 className="mt-2 text-2xl font-bold text-foreground">AI Coach</h1>
 
       {activeHabits.length === 0 ? (
-        <p className="mt-10 text-foreground/60">Add a habit first, then your coach will have something to work with.</p>
+        <p className="mt-10 text-muted-foreground">Add a habit first, then your coach will have something to work with.</p>
       ) : !result ? (
         <div className="mt-10 flex flex-col items-center gap-4">
-          <p className="max-w-sm text-foreground/70">
+          <p className="max-w-sm text-muted-foreground">
             Get a weekly consistency check-in -- a score, some encouragement, and a few specific insights.
           </p>
           <Button onClick={handleFetch} disabled={status === "loading"}>
@@ -91,7 +91,7 @@ export function CoachView({ habits, completions, accessToken, onBack }: Props) {
             type="button"
             onClick={handleFetch}
             disabled={status === "loading"}
-            className="cursor-pointer text-sm text-foreground/50 hover:text-foreground"
+            className="cursor-pointer text-sm text-muted-foreground hover:text-foreground"
           >
             {status === "loading" ? "Refreshing…" : "↻ Refresh"}
           </button>
@@ -135,7 +135,7 @@ function ConsistencyRing({ score }: { score: number }) {
       </motion.svg>
       <div className="relative text-center">
         <p className="text-3xl font-bold text-foreground">{clamped}</p>
-        <p className="text-xs text-foreground/50">consistency</p>
+        <p className="text-xs text-muted-foreground">consistency</p>
       </div>
     </div>
   );

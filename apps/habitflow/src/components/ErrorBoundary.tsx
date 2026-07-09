@@ -25,7 +25,7 @@ export class ErrorBoundary extends Component<Props, State> {
       return (
         <div className="mx-auto flex min-h-dvh max-w-md flex-col items-center justify-center gap-4 px-6 text-center">
           <p className="text-xl font-semibold text-foreground">Something hiccuped on our end.</p>
-          <p className="text-sm text-foreground/60">
+          <p className="text-sm text-muted-foreground">
             Your progress up to a moment ago is saved -- reloading should bring you right back.
           </p>
           <Button onClick={() => window.location.reload()}>Reload</Button>

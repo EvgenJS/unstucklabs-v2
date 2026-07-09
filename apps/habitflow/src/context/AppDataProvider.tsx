@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { getApiClient, PRODUCT_SLUG } from "../lib/api";
 import { useAuth } from "../lib/auth-context";
-import { emptyData, type Habit, type HabitFlowData } from "../lib/types";
+import { emptyData, nextAccentColor, withHabitColors, type Habit, type HabitFlowData } from "../lib/types";
 import { computeStreak, dateKey, pruneCompletions, pruneRecoveries, updateLongestStreak } from "../lib/streaks";
 
 interface NewHabitInput {
@@ -39,7 +39,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     getApiClient(accessToken)
       .appUserData.get(PRODUCT_SLUG)
       .then(({ data: remote }) => {
-        if (remote) setData(remote as HabitFlowData);
+        if (remote) setData(withHabitColors(remote as HabitFlowData));
       })
       .finally(() => setLoading(false));
   }, [accessToken]);
@@ -90,6 +90,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       action: input.action,
       time: input.time,
       place: input.place,
+      color: nextAccentColor(current.habits.length),
       createdAt: new Date().toISOString(),
       archivedAt: null,
     };

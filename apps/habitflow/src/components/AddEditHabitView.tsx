@@ -38,7 +38,7 @@ export function AddEditHabitView({ habit, onSave, onArchive, onBack }: Props) {
 
   return (
     <div className="mx-auto flex min-h-dvh max-w-lg flex-col px-6 py-8">
-      <button type="button" onClick={onBack} className="cursor-pointer self-start text-sm text-foreground/50 hover:text-foreground">
+      <button type="button" onClick={onBack} className="cursor-pointer self-start text-sm text-muted-foreground hover:text-foreground">
         ← Back
       </button>
       <h1 className="mt-2 text-2xl font-bold text-foreground">{habit ? "Edit habit" : "New habit"}</h1>
@@ -70,7 +70,7 @@ export function AddEditHabitView({ habit, onSave, onArchive, onBack }: Props) {
           <Input id="habit-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Meditation" required />
         </div>
 
-        <p className="text-sm text-foreground/60">I will...</p>
+        <p className="text-sm text-muted-foreground">I will...</p>
 
         <div>
           <label htmlFor="habit-action" className="mb-1 block text-sm font-medium text-foreground">
@@ -87,14 +87,14 @@ export function AddEditHabitView({ habit, onSave, onArchive, onBack }: Props) {
 
         <div>
           <label htmlFor="habit-time" className="mb-1 block text-sm font-medium text-foreground">
-            Time <span className="font-normal text-foreground/40">(optional)</span>
+            Time <span className="font-normal text-muted-foreground">(optional)</span>
           </label>
           <Input id="habit-time" value={time} onChange={(e) => setTime(e.target.value)} placeholder="right after waking up" />
         </div>
 
         <div>
           <label htmlFor="habit-place" className="mb-1 block text-sm font-medium text-foreground">
-            Place <span className="font-normal text-foreground/40">(optional)</span>
+            Place <span className="font-normal text-muted-foreground">(optional)</span>
           </label>
           <Input id="habit-place" value={place} onChange={(e) => setPlace(e.target.value)} placeholder="in the bedroom" />
         </div>
@@ -105,7 +105,7 @@ export function AddEditHabitView({ habit, onSave, onArchive, onBack }: Props) {
           <button
             type="button"
             onClick={onArchive}
-            className="cursor-pointer text-sm text-foreground/40 hover:text-destructive"
+            className="cursor-pointer text-sm text-muted-foreground hover:text-destructive"
           >
             Archive this habit
           </button>

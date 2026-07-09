@@ -60,7 +60,7 @@ export function RecoveryDayModal({ habit, accessToken, onAccept, onClose }: Prop
       >
         <p className="text-sm font-medium text-accent">Recovery day</p>
 
-        {status === "loading" && <p className="mt-4 text-foreground/60">Thinking of something small…</p>}
+        {status === "loading" && <p className="mt-4 text-muted-foreground">Thinking of something small…</p>}
         {status === "error" && (
           <>
             <p className="mt-4 text-sm text-destructive">{error}</p>
@@ -72,7 +72,7 @@ export function RecoveryDayModal({ habit, accessToken, onAccept, onClose }: Prop
         {suggestion && (
           <>
             <p className="mt-3 text-lg font-semibold text-foreground">{suggestion.suggestion}</p>
-            <p className="mt-2 text-sm text-foreground/60">{suggestion.rationale}</p>
+            <p className="mt-2 text-sm text-muted-foreground">{suggestion.rationale}</p>
             <div className="mt-6 flex gap-3">
               <Button onClick={handleAccept}>Done, that counts</Button>
               <Button variant="secondary" onClick={onClose}>

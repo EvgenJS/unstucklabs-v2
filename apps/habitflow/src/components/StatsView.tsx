@@ -35,20 +35,20 @@ export function StatsView({ habits, completions, longestStreakEver, onBack }: Pr
 
   return (
     <div className="mx-auto flex min-h-dvh max-w-lg flex-col px-6 py-8">
-      <button type="button" onClick={onBack} className="cursor-pointer self-start text-sm text-foreground/50 hover:text-foreground">
+      <button type="button" onClick={onBack} className="cursor-pointer self-start text-sm text-muted-foreground hover:text-foreground">
         ← Back
       </button>
       <h1 className="mt-2 text-2xl font-bold text-foreground">Stats</h1>
 
       <div className="mt-6 grid grid-cols-2 gap-4">
         <Card>
-          <p className="text-sm text-foreground/60">Longest streak</p>
+          <p className="text-sm text-muted-foreground">Longest streak</p>
           <p className="mt-1 text-2xl font-bold text-foreground">
             {longestStreak} day{longestStreak === 1 ? "" : "s"}
           </p>
         </Card>
         <Card>
-          <p className="text-sm text-foreground/60">Total check-ins</p>
+          <p className="text-sm text-muted-foreground">Total check-ins</p>
           <p className="mt-1 text-2xl font-bold text-foreground">{totalCompletions}</p>
         </Card>
       </div>
@@ -65,7 +65,7 @@ export function StatsView({ habits, completions, longestStreakEver, onBack }: Pr
             </div>
           ))}
         </div>
-        <p className="mt-2 text-xs text-foreground/40">Daily completion rate across all active habits</p>
+        <p className="mt-2 text-xs text-muted-foreground">Daily completion rate across all active habits</p>
       </Card>
     </div>
   );

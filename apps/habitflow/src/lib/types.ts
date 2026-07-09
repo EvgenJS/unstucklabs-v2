@@ -5,8 +5,34 @@ export interface Habit {
   action: string;
   time: string;
   place: string;
+  color: string; // hex, assigned once at creation from ACCENT_COLORS -- distinguishes habits at a glance in the week grid
   createdAt: string;
   archivedAt: string | null; // soft-delete -- never hard-delete a habit with completion history
+}
+
+// Per-habit accent palette -- rotated by creation order, not user-picked, so
+// Add Habit stays a single short form (no color-picker UI). Each is a
+// saturated ~600-level tone that reads clearly against the cream background
+// and gives enough contrast for a white checkmark/icon on top of a solid fill.
+export const ACCENT_COLORS = [
+  "#DC2626", // red
+  "#D97706", // amber
+  "#0D9488", // teal
+  "#7C3AED", // violet
+  "#16A34A", // green
+  "#2563EB", // blue
+];
+
+export function nextAccentColor(existingHabitCount: number): string {
+  return ACCENT_COLORS[existingHabitCount % ACCENT_COLORS.length]!;
+}
+
+// Backfills `color` on habits persisted before this field existed (the
+// remote AppUserData blob is versioned but read-whole/write-whole, so old
+// data can lack fields a newer client expects -- see HabitFlowData.version).
+export function withHabitColors(data: HabitFlowData): HabitFlowData {
+  if (data.habits.every((h) => h.color)) return data;
+  return { ...data, habits: data.habits.map((h, i) => (h.color ? h : { ...h, color: nextAccentColor(i) })) };
 }
 
 // Keyed by ISO date string (YYYY-MM-DD) -> array of habitIds completed that

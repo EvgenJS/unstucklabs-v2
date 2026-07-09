@@ -23,7 +23,7 @@ function AppContent() {
   if (loading) {
     return (
       <div className="flex min-h-dvh items-center justify-center">
-        <p className="text-foreground/60">Loading…</p>
+        <p className="text-muted-foreground">Loading…</p>
       </div>
     );
   }
@@ -122,7 +122,7 @@ function BottomNav({ screen, onNavigate }: { screen: Screen; onNavigate: (s: Scr
             onClick={() => onNavigate(tab.key)}
             aria-current={screen === tab.key ? "page" : undefined}
             className={`flex flex-1 cursor-pointer flex-col items-center gap-0.5 py-2 text-xs ${
-              screen === tab.key ? "text-primary" : "text-foreground/50"
+              screen === tab.key ? "text-primary" : "text-muted-foreground"
             }`}
           >
             <span aria-hidden="true">{tab.icon}</span>

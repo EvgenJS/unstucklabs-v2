@@ -58,7 +58,7 @@ export function SubscriptionGate({ children }: { children: ReactNode }) {
   if (loading || access === "checking") {
     return (
       <div className="flex min-h-dvh items-center justify-center">
-        <p className="text-foreground/60">Loading…</p>
+        <p className="text-muted-foreground">Loading…</p>
       </div>
     );
   }
@@ -120,7 +120,7 @@ function TrialScreen({
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center gap-4 px-6 text-center">
       <h1 className="text-2xl font-bold text-foreground">Build habits that stick</h1>
-      <p className="max-w-sm text-foreground/70">
+      <p className="max-w-sm text-muted-foreground">
         Start your 5 days free -- full access, no card needed. Habit tracking, streaks, and your AI coach, all
         unlocked from day one.
       </p>
@@ -152,7 +152,7 @@ function GateScreen({
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center gap-4 px-6 text-center">
       <h1 className="text-2xl font-bold text-foreground">{title}</h1>
-      <p className="max-w-sm text-foreground/70">{body}</p>
+      <p className="max-w-sm text-muted-foreground">{body}</p>
       <div className="flex gap-3">
         <Button onClick={() => window.open(ctaHref, "_blank", "noopener")}>{ctaLabel}</Button>
         <Button variant="secondary" onClick={onRecheck} disabled={recheckPending}>

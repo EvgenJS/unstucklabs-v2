@@ -35,7 +35,7 @@ export function TodayView({ habits, completions, onCheckOff, onAddHabit, onEditH
       {activeHabits.length === 0 ? (
         <div className="mt-16 flex flex-col items-center gap-3 text-center">
           <p className="text-4xl">🌱</p>
-          <p className="text-foreground/70">No habits yet -- add your first one to get started.</p>
+          <p className="text-muted-foreground">No habits yet -- add your first one to get started.</p>
           <Button onClick={onAddHabit}>Add your first habit</Button>
         </div>
       ) : (
@@ -87,16 +87,16 @@ function HabitCard({
 
   return (
     <div
-      className={`rounded-xl border border-border bg-white p-4 transition-shadow duration-200 ${
-        streak >= 21 ? "shadow-[0_0_16px_-2px_var(--color-accent)]" : ""
-      }`}
+      className="rounded-xl border border-border bg-white p-4 transition-shadow duration-200"
+      style={streak >= 21 ? { boxShadow: `0 0 16px -2px ${habit.color}` } : undefined}
     >
       <div className="flex items-start justify-between gap-3">
         <button type="button" onClick={onEdit} className="flex-1 cursor-pointer text-left">
-          <p className="font-semibold text-foreground">
+          <p className="flex items-center gap-2 font-semibold text-foreground">
+            <span aria-hidden="true" className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: habit.color }} />
             {habit.emoji} {habit.name}
           </p>
-          <p className="mt-0.5 text-xs text-foreground/50">
+          <p className="mt-0.5 text-xs text-muted-foreground">
             {streak > 0 ? `${streak}-day streak` : "No streak yet"} {badge}
           </p>
         </button>
@@ -107,11 +107,12 @@ function HabitCard({
           whileTap={{ scale: 0.9 }}
           aria-pressed={isDoneToday}
           aria-label={isDoneToday ? `Mark ${habit.name} as not done today` : `Mark ${habit.name} as done today`}
-          className={`flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full border-2 text-xl transition-colors duration-200 ${
+          className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full border-2 text-xl text-white transition-colors duration-200"
+          style={
             isDoneToday
-              ? "border-primary bg-primary text-white"
-              : "border-border bg-white text-foreground/30 hover:border-primary"
-          }`}
+              ? { borderColor: habit.color, backgroundColor: habit.color }
+              : { borderColor: "var(--color-border)", backgroundColor: "white", color: "var(--color-muted-foreground)" }
+          }
         >
           {isDoneToday ? "✓" : ""}
         </motion.button>
@@ -125,17 +126,18 @@ function HabitCard({
           const isFuture = key > todayKey;
           return (
             <div key={key} className="flex flex-col items-center gap-1">
-              <span className="text-[10px] text-foreground/40">{WEEKDAY_LABELS[day.getDay()]}</span>
+              <span className="text-[10px] font-medium text-muted-foreground">{WEEKDAY_LABELS[day.getDay()]}</span>
               <div
-                className={`h-6 w-6 rounded-md border ${
+                className="h-6 w-6 rounded-md border-2"
+                style={
                   done
-                    ? "border-primary bg-primary"
+                    ? { borderColor: habit.color, backgroundColor: habit.color }
                     : isToday
-                      ? "border-primary border-dashed bg-transparent"
+                      ? { borderColor: habit.color, borderStyle: "dashed", backgroundColor: "transparent" }
                       : isFuture
-                        ? "border-border/50 bg-transparent"
-                        : "border-border bg-muted"
-                }`}
+                        ? { borderColor: "var(--color-border)", backgroundColor: "transparent", opacity: 0.5 }
+                        : { borderColor: "var(--color-border)", backgroundColor: "var(--color-muted)" }
+                }
               />
             </div>
           );

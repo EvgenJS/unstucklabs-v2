@@ -9,28 +9,30 @@
    for the same fix, first found there. */
 @source "../../../packages/ui/src";
 
-/* "Warm stone" -- taupe primary + amber accent, Nunito Sans. Chosen by the
-   client from 5 candidate directions generated via the ui-ux-pro-max skill
-   (sourced from its real palette database, product type "Book & Reading
-   Tracker" as the closest muted/grounded match) and presented as an
-   interactive visual comparison. Muted and grounded rather than saturated --
-   reads as a quiet-confidence habit tool, not a game. Deliberately distinct
-   from Store's teal/orange/Plus Jakarta Sans and Unstuck Daily's
-   indigo/sunrise-yellow/DM Sans identities (see docs/ROADMAP.md Phase 5).
-   Font pairing is "Soft Rounded" (Varela Round + Nunito Sans) from the
-   skill's typography database; using Nunito Sans alone for --font-sans to
-   match the established single-font-per-app convention (Store, Unstuck
-   Daily) rather than introducing a heading/body split not yet wired into
-   packages/ui's components. */
+/* "Warm coral" -- revised from the original "Warm Stone" muted-taupe
+   direction after live user feedback that it read as low-contrast/hard to
+   read (faint borders, washed-out secondary text). Re-sourced from the
+   ui-ux-pro-max skill's palette database under product type "Habit Tracker"
+   specifically (amber primary + green accent on cream, foreground bumped to
+   near-black for real contrast), then warmed toward coral/orange to match a
+   reference mockup the client liked. Nunito Sans kept -- only the color
+   values changed. Deliberately distinct from Store's teal/orange/Plus
+   Jakarta Sans and Unstuck Daily's indigo/sunrise-yellow/DM Sans identities.
+   --color-muted-foreground is a HabitFlow-local addition (not yet a shared
+   packages/ui token): a solid, always-legible secondary-text color, used
+   instead of `text-foreground/NN` opacity utilities, which is what produced
+   the original contrast problem -- opacity on an already-dark foreground
+   washes out fast against a light background. */
 @theme {
-  --color-primary: #78716c;
-  --color-secondary: #a8a29e;
+  --color-primary: #ea580c;
+  --color-secondary: #57534e;
   --color-accent: #d97706;
   --color-background: #fffbeb;
-  --color-foreground: #292524;
-  --color-muted: #f5f0e8;
-  --color-border: #e7e0d4;
-  --color-ring: #78716c;
+  --color-foreground: #1c1917;
+  --color-muted: #fcf6f0;
+  --color-muted-foreground: #57534e;
+  --color-border: #d9c7a3;
+  --color-ring: #ea580c;
   --color-destructive: #dc2626;
   --font-sans: "Nunito Sans", ui-sans-serif, system-ui, sans-serif;
 }

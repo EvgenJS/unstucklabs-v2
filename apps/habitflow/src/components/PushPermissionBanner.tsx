@@ -41,12 +41,12 @@ export function PushPermissionBanner() {
 
   return (
     <div className="mx-auto mt-4 flex max-w-lg items-center justify-between gap-3 rounded-lg border border-border bg-white px-4 py-3 text-sm">
-      <p className="text-foreground/70">
+      <p className="text-muted-foreground">
         Want a gentle nudge if a day slips by unchecked? We'll only ping you about habits you're tracking, no more
         than once a day.
       </p>
       <div className="flex shrink-0 gap-2">
-        <button type="button" onClick={handleDismiss} className="cursor-pointer text-foreground/50 hover:text-foreground">
+        <button type="button" onClick={handleDismiss} className="cursor-pointer text-muted-foreground hover:text-foreground">
           No thanks
         </button>
         <Button variant="secondary" onClick={handleEnable} disabled={status === "asking"}>
