@@ -19,6 +19,8 @@ import { createUnstuckDailyModule } from "./modules/unstuck-daily";
 export type { TaskBreakdown, Resource } from "./modules/unstuck-daily";
 import { createHabitFlowModule } from "./modules/habitflow";
 export type { HabitCoachInputHabit, HabitCoachResult, RecoveryDaySuggestion } from "./modules/habitflow";
+import { createFishCastModule } from "./modules/fishcast";
+export type { FishSpecies, WaterType, Units, ForecastInput, ForecastResult, GeocodeResult } from "./modules/fishcast";
 
 export * from "./types";
 export { ApiError } from "./client";
@@ -42,6 +44,7 @@ export function createApiClient(config: ApiClientConfig) {
     push: createPushModule(config),
     unstuckDaily: createUnstuckDailyModule(config),
     habitflow: createHabitFlowModule(config),
+    fishcast: createFishCastModule(config),
   };
 }
 

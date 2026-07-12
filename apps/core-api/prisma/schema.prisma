@@ -274,3 +274,22 @@ model PushSubscription {
   @@index([userId, productId])
   @@map("push_subscriptions")
 }
+
+// Cross-user cache of AI forecast results for FishCast, keyed by rounded
+// location + fish + water type + units -- NOT AppUserData JSONB, because
+// the whole point is sharing one forecast across every user who queries
+// the same spot, the same cross-user-query carve-out PushSubscription
+// above already uses. Deliberately excludes any per-user personalization
+// (catch history) from both the key and the cached `data` -- v1 baked
+// personalization into the AI prompt without keying the cache by user,
+// leaking one user's personalized analysis to everyone else querying the
+// same spot. Personalization is computed separately, per-request, from
+// the caller's own AppUserData, and never cached (see forecast.routes.ts).
+model FishCastForecastCache {
+  id        String   @id @default(cuid())
+  cacheKey  String   @unique
+  data      Json
+  createdAt DateTime @default(now())
+
+  @@map("fishcast_forecast_cache")
+}

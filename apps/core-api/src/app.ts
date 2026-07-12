@@ -29,6 +29,8 @@ import { unstuckDailyAiRoutes } from "./modules/unstuck-daily/ai.routes.js";
 import { pushRoutes } from "./modules/push/push.routes.js";
 import { trialRoutes } from "./modules/subscriptions/trial.routes.js";
 import { habitflowAiRoutes } from "./modules/habitflow/ai.routes.js";
+import { fishcastForecastRoutes } from "./modules/fishcast/forecast.routes.js";
+import { fishcastCatchPhotoRoutes } from "./modules/fishcast/catch-photo.routes.js";
 
 export async function buildApp(): Promise<FastifyInstance> {
   const app = Fastify({ logger: true });
@@ -69,6 +71,8 @@ export async function buildApp(): Promise<FastifyInstance> {
   await app.register(appUserDataRoutes);
   await app.register(unstuckDailyAiRoutes);
   await app.register(habitflowAiRoutes);
+  await app.register(fishcastForecastRoutes);
+  await app.register(fishcastCatchPhotoRoutes);
   await app.register(pushRoutes);
 
   return app;
