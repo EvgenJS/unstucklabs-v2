@@ -19,12 +19,20 @@ export function createEmailService() {
         console.log(html);
         return;
       }
-      await client.emails.send({
+      const { error } = await client.emails.send({
         from: "UnstuckLabs <hello@unstucklabs.com>",
         to,
         subject,
         html,
       });
+      // The Resend SDK never throws on API-level failures (bad domain,
+      // rate limit, etc.) -- it resolves with { error } instead, so this
+      // check is the only thing standing between a broken send and a
+      // silent no-op that looks identical to success from the caller's
+      // side (e.g. register() still returning 201).
+      if (error) {
+        throw new Error(`[email] Resend send to ${to} failed: ${error.message}`);
+      }
     },
   };
 }
