@@ -340,6 +340,21 @@ six brand hex values as v1, just paired correctly. `--color-border` is
 similarly a new, slightly-lifted-navy value; v1 bordered inputs with the
 same color as their own background (functionally invisible).
 
+## Deployment
+
+Nginx + PM2 configs for the self-hosted single-server deployment described
+in CLAUDE.md now exist under `deploy/` — `ecosystem.config.js` (repo root,
+PM2 process defs for core-api/store/admin) and `deploy/nginx/*.conf` (one
+server block per subdomain, plus shared snippets). Full walkthrough (DNS,
+certbot, `pnpm build`, `prisma migrate deploy`, PM2 startup) in
+`deploy/DEPLOYMENT.md`. Not yet exercised against a real server — the
+configs are written and internally consistent (ports/paths cross-checked
+against `package.json` scripts and each app's actual build output) but
+unverified end-to-end until an actual deploy happens. WesternBid is **not**
+required to deploy; the site runs fully on `NullPaymentProvider` until
+that's granted (see External Blocking Dependencies below) — real checkout
+is the only thing that won't work.
+
 ## External Blocking Dependencies
 
 - **WesternBid API access**: requires opening a support ticket to obtain an API key;
@@ -619,3 +634,17 @@ same color as their own background (functionally invisible).
   present in v1). Proactive push notifications on saved spots were
   proposed alongside those and explicitly declined for now — see
   Future/Backlog.
+- 2026-07-13 — Deployment infrastructure: `ecosystem.config.js` (PM2, three
+  processes — core-api/store/admin, all `exec_mode: "fork"`, explicitly
+  `instances: 1` on core-api since `push.scheduler.ts` isn't safe to run
+  more than once) and `deploy/nginx/*.conf` (one server block per
+  subdomain: apex+www→store, admin, api, and the three static mini-app
+  builds, plus shared snippets for reverse-proxy headers, SPA cache
+  headers, and security headers). `core-api/src/server.ts` now reads
+  `HOST` from env (default `0.0.0.0`, set to `127.0.0.1` in production —
+  Nginx is the only thing that should reach that port directly). Full
+  walkthrough in `deploy/DEPLOYMENT.md`, including the
+  `prisma migrate deploy` vs. `prisma migrate dev` distinction (the
+  existing `pnpm db:migrate` script is dev-only, deliberately not
+  repointed at `deploy`, since local iteration still needs the dev
+  command). Not yet run against a real server.
