@@ -355,6 +355,24 @@ required to deploy; the site runs fully on `NullPaymentProvider` until
 that's granted (see External Blocking Dependencies below) — real checkout
 is the only thing that won't work.
 
+## Email Verification
+
+New Store registrations now require email confirmation before login, matching
+v1 FishCast's proven design: `POST /auth/register` creates the user
+unverified and emails a 24h single-use token (`EMAIL_VERIFICATION_TOKEN_HOURS`)
+instead of logging in immediately; `POST /auth/login` 403s with
+`EMAIL_NOT_VERIFIED` until the link is clicked; `GET /auth/verify-email`
+flips the account and auto-logs the user in via the same httpOnly refresh
+cookie every mini-app relies on for SSO — verified live in-browser post-verify
+that a mini-app (FishCast) still recognizes the session immediately. All
+pre-existing accounts (including the seeded admin) were grandfathered as
+verified in the migration, so no existing login broke. `resendVerification`
+always returns an identical generic response regardless of whether the
+account exists, to avoid leaking which emails are registered. Locally,
+without a real `RESEND_API_KEY` set, the verification link is printed to
+core-api's terminal output instead of sent, so the flow is fully testable
+without Resend access.
+
 ## External Blocking Dependencies
 
 - **WesternBid API access**: requires opening a support ticket to obtain an API key;
@@ -648,3 +666,15 @@ is the only thing that won't work.
   existing `pnpm db:migrate` script is dev-only, deliberately not
   repointed at `deploy`, since local iteration still needs the dev
   command). Not yet run against a real server.
+- 2026-07-13 — Email verification on registration (Resend-backed), matching
+  v1 FishCast's design: `User` gains `isEmailVerified`/
+  `emailVerificationToken`/`emailVerificationExpires`; `register()` no
+  longer issues a session, `login()` 403s `EMAIL_NOT_VERIFIED` until the
+  emailed link is clicked, `verifyEmail()` auto-logs in on success. All
+  existing rows (including the seeded admin) were backfilled as verified
+  in the same migration so no current login broke. `resendVerification()`
+  always returns the same generic response to avoid account-enumeration.
+  Verified end to end live in-browser: register → blocked login → resend
+  → click link → auto-login on `/account` → normal re-login → FishCast
+  still SSO'd correctly afterward, proving the shared refresh cookie
+  wasn't regressed. See "Email Verification" section above for details.

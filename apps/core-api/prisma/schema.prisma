@@ -49,6 +49,14 @@ model User {
   createdAt    DateTime @default(now())
   lastSeenAt   DateTime @default(now())
 
+  // Email verification -- required at registration (see docs/ROADMAP.md).
+  // New rows default to false; the migration that adds this column
+  // backfills every pre-existing row to true so nobody already registered
+  // (including the seeded admin) gets locked out retroactively.
+  isEmailVerified          Boolean   @default(false)
+  emailVerificationToken   String?
+  emailVerificationExpires DateTime?
+
   // Admin RBAC: absence of a Membership row means "not an admin user".
   memberships          Membership[]
   subscriptions        Subscription[]

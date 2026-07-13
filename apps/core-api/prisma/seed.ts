@@ -65,6 +65,9 @@ async function main() {
     create: {
       email: adminEmail,
       passwordHash: await hashPassword(adminPassword),
+      // A freshly seeded admin must be able to log in immediately -- the
+      // schema default (false) is for self-registered accounts only.
+      isEmailVerified: true,
     },
     update: {},
   });

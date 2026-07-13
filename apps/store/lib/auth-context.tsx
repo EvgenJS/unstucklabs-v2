@@ -9,7 +9,13 @@ interface AuthContextValue {
   accessToken: string | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string) => Promise<void>;
+  // Resolves to { verified: false } when the account still needs email
+  // verification (the normal case -- see docs/ROADMAP.md) -- no session is
+  // created yet, so the caller shouldn't treat this as a login.
+  register: (email: string, password: string) => Promise<{ verified: boolean }>;
+  // Consumes a verify-email token and, on success, logs the user in --
+  // core-api's /auth/verify-email issues a real session on success.
+  verifyEmail: (token: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -49,6 +55,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function register(email: string, password: string) {
     const result = await getApiClient().auth.register(email, password);
+    if (!result.accessToken) {
+      // Normal case -- verification email sent, no session yet.
+      return { verified: false };
+    }
+    setAccessToken(result.accessToken);
+    const me = await getApiClient(result.accessToken).auth.me();
+    setUser(me);
+    return { verified: true };
+  }
+
+  async function verifyEmail(token: string) {
+    const result = await getApiClient().auth.verifyEmail(token);
     setAccessToken(result.accessToken);
     const me = await getApiClient(result.accessToken).auth.me();
     setUser(me);
@@ -61,7 +79,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, accessToken, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, accessToken, loading, login, register, verifyEmail, logout }}>
       {children}
     </AuthContext.Provider>
   );

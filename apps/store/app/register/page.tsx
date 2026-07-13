@@ -14,19 +14,39 @@ function RegisterForm() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [checkInbox, setCheckInbox] = useState(false);
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
     setLoading(true);
     setError(null);
     try {
-      await register(email, password);
-      router.push(searchParams.get("redirect") ?? "/account");
+      const { verified } = await register(email, password);
+      if (verified) {
+        router.push(searchParams.get("redirect") ?? "/account");
+      } else {
+        setCheckInbox(true);
+      }
     } catch {
       setError("Could not create an account — that email may already be registered.");
     } finally {
       setLoading(false);
     }
+  }
+
+  if (checkInbox) {
+    return (
+      <div className="mx-auto max-w-sm px-6 py-16 text-center">
+        <h1 className="text-2xl font-bold text-foreground">Check your inbox</h1>
+        <p className="mt-4 text-sm text-foreground/70">
+          We sent a verification link to <span className="font-medium text-foreground">{email}</span>. Click it to
+          activate your account, then log in.
+        </p>
+        <Link href="/login" className="mt-6 inline-block text-sm font-semibold text-primary hover:text-primary/80">
+          Back to login
+        </Link>
+      </div>
+    );
   }
 
   return (
