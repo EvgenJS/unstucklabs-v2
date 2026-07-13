@@ -68,23 +68,22 @@ Phase 1/3/4 work, only the moment we submit the WesternBid application.
 
 - [x] Real products listed in the catalog (the mini-apps we actually intend to
       sell — "coming soon" status is fine, but no lorem-ipsum/placeholder products)
-      — Unstuck Daily is seeded; more products land as Phase 4+ apps are built
-- [ ] No empty sections or template/placeholder content anywhere on the public site
-      — **not yet true**: the About page intentionally has no named responsible
-      person yet (user asked for a placeholder there for now, see below)
-- [ ] Any visitor password gate / staging lock removed — site is genuinely public
-      (n/a until deployed; nothing gates it locally)
+      — Unstuck Daily, HabitFlow, FishCast are all seeded and live
+- [x] No empty sections or template/placeholder content anywhere on the public site
+      — the About page's named-responsible-person placeholder (the one remaining
+      gap here) is now filled in, see below
+- [x] Any visitor password gate / staging lock removed — site is genuinely public
+      — confirmed live on unstucklabs.store, no auth wall anywhere on the public site
 - [x] Shipping/delivery method configured (digital delivery — `/legal/shipping-policy`
       describes instant access via account + confirmation email)
-- [x] Contact Us page with at least two contact methods — email (`hello@unstucklabs.com`)
+- [x] Contact Us page with at least two contact methods — email (`hello@unstucklabs.store`)
       + working contact form (`/contact`, posts to `POST /contact`, admin-readable via
       `GET /admin/contact-messages`). Telegram/social was requested but no handle
       exists yet — add once there's a real one; email + form already satisfy
       WesternBid's stated minimum of two methods.
-- [ ] About Us page: idea/motivation/business model written (`/about`), but the
-      **named responsible person is a placeholder** — user explicitly asked to defer
-      this and write it later. Must be filled in with a real name before filing
-      the WesternBid application.
+- [x] About Us page: idea/motivation/business model written (`/about`), named
+      responsible person is **Yevhen Spatar**, operating independently as an
+      individual based in Ukraine — matches the legal pages' stated business status.
 - [x] Legal/Policy pages published: `/legal/shipping-policy`, `/legal/refund-policy`,
       `/legal/terms`, `/legal/privacy` — written to accurately reflect that
       UnstuckLabs is currently operated by an individual (not a registered legal
@@ -93,9 +92,10 @@ Phase 1/3/4 work, only the moment we submit the WesternBid application.
 - [ ] Western Bid merchant profile itself reaches "Confirmed" status (separate
       from the storefront checklist — user-side account step, not started)
 
-Before filing the WesternBid application: (1) add a real name to `/about`,
-(2) reach "Confirmed" merchant profile status, (3) optionally add a Telegram/
-social link once one exists. Everything else on this checklist is done.
+Before filing the WesternBid application: reach "Confirmed" merchant profile
+status (the one remaining item — a user-side WesternBid account step, not a
+storefront change), and optionally add a Telegram/social link once one exists.
+Every storefront-side item on this checklist is done.
 
 ## Phase 3 — Admin MVP
 

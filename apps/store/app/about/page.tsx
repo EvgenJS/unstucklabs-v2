@@ -22,8 +22,9 @@ export default function AboutPage() {
           pay for what actually helps you.
         </p>
         <p>
-          UnstuckLabs is built and run independently, not by a large company — every tool ships because
-          someone needed it themselves first.
+          UnstuckLabs is built and run by <strong>Yevhen Spatar</strong>, operating independently as an
+          individual based in Ukraine — not a large company, not a registered legal entity. Every tool
+          ships because I needed it myself first.
         </p>
       </div>
     </div>
