@@ -32,7 +32,7 @@ export async function webhooksRoutes(fastify: FastifyInstance) {
       );
 
       const subscriptionsService = createSubscriptionsService(fastify.prisma);
-      await subscriptionsService.createOrUpdateFromPaymentEvent(event);
+      await subscriptionsService.createOrUpdateFromPaymentEvent(event, provider.name);
 
       return reply.code(204).send();
     } catch (err) {

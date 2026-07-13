@@ -2,6 +2,7 @@ import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { getActivePaymentProvider } from "./provider-factory.js";
 import { validatePromoCode, redeemPromoCode } from "../promo-codes/promo-codes.service.js";
+import { createSubscriptionsService } from "../subscriptions/subscriptions.service.js";
 
 const checkoutSchema = z.object({
   productId: z.string().min(1),
@@ -59,6 +60,27 @@ export async function paymentsRoutes(fastify: FastifyInstance) {
       currency: product.currency,
       billingPeriod: body.billingPeriod,
     });
+
+    // NullPaymentProvider has no real payment page to redirect to, so no
+    // webhook will ever arrive to grant access -- grant it here instead,
+    // synchronously, so the site is fully testable (WesternBid reviews the
+    // live storefront before issuing API access, see docs/ROADMAP.md)
+    // while still blocked on that ticket. Remove this branch once a real
+    // provider is wired in; its webhook will take over granting access.
+    if (provider.name === "null") {
+      const subscriptionsService = createSubscriptionsService(fastify.prisma);
+      await subscriptionsService.createOrUpdateFromPaymentEvent(
+        {
+          type: "purchase.completed",
+          userId,
+          productId: product.id,
+          providerTransactionId: session.providerSessionId,
+          billingPeriod: body.billingPeriod,
+          raw: session,
+        },
+        provider.name
+      );
+    }
 
     return reply.send(session);
   });
