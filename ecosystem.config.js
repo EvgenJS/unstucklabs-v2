@@ -30,6 +30,11 @@ module.exports = {
       cwd: "apps/store",
       script: "node_modules/.bin/next",
       args: "start -p 3000 -H 127.0.0.1",
+      // pnpm's .bin/next is a `#!/bin/sh` shim, not a plain JS file -- PM2's
+      // default node interpreter tries to require() it and fails with a
+      // syntax error. "none" tells PM2 to exec it directly via its own
+      // shebang instead.
+      interpreter: "none",
       exec_mode: "fork",
       instances: 1,
       autorestart: true,
@@ -43,6 +48,7 @@ module.exports = {
       cwd: "apps/admin",
       script: "node_modules/.bin/next",
       args: "start -p 3002 -H 127.0.0.1",
+      interpreter: "none",
       exec_mode: "fork",
       instances: 1,
       autorestart: true,
