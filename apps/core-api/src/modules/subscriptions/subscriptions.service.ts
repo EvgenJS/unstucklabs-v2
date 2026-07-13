@@ -7,7 +7,7 @@ import type { WebhookEvent } from "../payments/payment-provider.interface.js";
 // never requires touching subscription logic itself.
 export function createSubscriptionsService(prisma: PrismaClient) {
   return {
-    async createOrUpdateFromPaymentEvent(event: WebhookEvent) {
+    async createOrUpdateFromPaymentEvent(event: WebhookEvent, providerName: string) {
       if (!event.userId || !event.productId) {
         throw new Error(`Webhook event missing userId/productId: ${event.type}`);
       }
@@ -29,7 +29,7 @@ export function createSubscriptionsService(prisma: PrismaClient) {
           userId: event.userId,
           productId: event.productId,
           status,
-          provider: "westernbid",
+          provider: providerName,
           providerCustomerId: event.providerCustomerId,
           providerSubscriptionId: event.providerSubscriptionId,
           providerTransactionId: event.providerTransactionId,
