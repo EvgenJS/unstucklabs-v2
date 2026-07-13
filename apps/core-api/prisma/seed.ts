@@ -40,6 +40,23 @@ async function main() {
     update: {},
   });
 
+  await prisma.product.upsert({
+    where: { slug: "fishcast" },
+    create: {
+      slug: "fishcast",
+      name: "FishCast",
+      subdomain: "fishcast",
+      tagline: "An app for knowing when the bite turns on before you drive out.",
+      description: "AI fishing forecasts, lure picks, and a catch log that learns your spots.",
+      pricingModel: "RECURRING",
+      priceCents: 700,
+      annualPriceCents: 7000, // matches Unstuck Daily/HabitFlow's pricing as a starting point
+      currency: "USD",
+      isActive: true,
+    },
+    update: {},
+  });
+
   const adminEmail = process.env.SEED_ADMIN_EMAIL ?? "admin@unstucklabs.com";
   const adminPassword = process.env.SEED_ADMIN_PASSWORD ?? "change-me-please";
 
@@ -102,7 +119,7 @@ async function main() {
     update: {},
   });
 
-  console.log(`Seeded products "${product.slug}" + "habitflow", admin user "${admin.email}" (OWNER), and 3 blog posts (2 published, 1 draft).`);
+  console.log(`Seeded products "${product.slug}" + "habitflow" + "fishcast", admin user "${admin.email}" (OWNER), and 3 blog posts (2 published, 1 draft).`);
 }
 
 main()

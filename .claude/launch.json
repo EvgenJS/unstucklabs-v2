@@ -30,6 +30,12 @@
       "runtimeExecutable": "pnpm",
       "runtimeArgs": ["--filter", "habitflow", "dev"],
       "port": 5174
+    },
+    {
+      "name": "fishcast",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "fishcast", "dev"],
+      "port": 5175
     }
   ]
 }

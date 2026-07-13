@@ -1,0 +1,53 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+@import "tailwindcss";
+@import "../../../packages/ui/src/tokens.css";
+
+/* Tailwind v4's automatic content detection only walks from this app's own
+   root -- packages/ui's component source (Button.tsx etc.) lives outside
+   that tree, so classes only used there (bg-accent, text-on-primary, ...)
+   would otherwise never be generated. Same fix as Unstuck Daily/HabitFlow. */
+@source "../../../packages/ui/src";
+
+/* v1 FishCast's exact color palette (tailwind.config.js), kept verbatim per
+   explicit client instruction -- no ui-ux-pro-max design pass for this app,
+   unlike Unstuck Daily/HabitFlow. This is v2's first dark-by-default
+   mini-app, a deliberate fit for the night-sky/deep-water fishing theme.
+
+   Role mapping from v1's brand.* names to this design system's semantic
+   tokens (Button.tsx's primary variant is `bg-accent text-on-primary`, so
+   "accent" here means "main CTA button background", matching v1's actual
+   usage of brand.cta for CTA buttons and brand.accent for links/active nav):
+     v1 brand.cta    (#F59E0B, amber)    -> --color-accent   (CTA buttons)
+     v1 brand.accent (#0EA5E9, sky blue) -> --color-primary  (links, outlines, active nav)
+     v1 brand.bg      -> --color-background
+     v1 brand.surface -> --color-surface (new token -- v1 had no distinct border color)
+     v1 brand.text    -> --color-foreground
+     v1 brand.muted   -> --color-muted-foreground
+
+   --color-on-primary is set to the dark background color rather than white:
+   white-on-amber measures under WCAG AA's 4.5:1 text-contrast minimum,
+   dark-on-amber clears it comfortably. Same six brand hex values as v1,
+   just paired for a11y instead of reproducing that contrast gap. --color-
+   border is a new lifted-navy value -- v1 bordered inputs with the same
+   color as their own background (functionally invisible); this keeps the
+   same dark feel while making borders actually visible. */
+@theme {
+  --color-primary: #0ea5e9;
+  --color-on-primary: #0b1426;
+  --color-accent: #f59e0b;
+  --color-background: #0b1426;
+  --color-surface: #0f1e36;
+  --color-foreground: #e2eaf4;
+  --color-muted: #0f1e36;
+  --color-muted-foreground: #94b3cc;
+  --color-border: #1a2f4f;
+  --color-ring: #0ea5e9;
+  --color-destructive: #dc2626;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+body {
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
+}

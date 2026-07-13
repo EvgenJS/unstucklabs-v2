@@ -16,7 +16,7 @@ function sanitizeFilename(name: string): string {
 export async function saveUploadedFile(
   buffer: Buffer,
   originalFilename: string,
-  category: "products" | "blog",
+  category: "products" | "blog" | "catches",
   entityId: string
 ): Promise<{ url: string; absolutePath: string }> {
   const dir = path.join(UPLOAD_DIR, category, entityId);

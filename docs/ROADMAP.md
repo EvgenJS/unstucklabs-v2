@@ -268,6 +268,78 @@ deployment, same caveat already documented for the scheduler's
 single-process assumption; revisit only if users in materially different
 timezones report the "today" boundary landing on the wrong day for them.
 
+## Phase 6 — Third Mini-App (FishCast)
+
+Same rule as Phase 4+/5: rewrite, not a port. v1's FishCast (a real
+React+Vite+TS frontend, Express+TS+Mongoose backend, Paddle/Patreon
+payments) contributed the product concept and, per explicit client
+instruction, its exact color palette — none of its code, its binary
+`isPro` freemium gating, or its Paddle/Patreon integration carried forward.
+
+- [x] Prisma: `FishCastForecastCache` — the second deliberate exception to
+      the AppUserData-JSONB rule (after `PushSubscription`), justified the
+      same way: forecasts need to be looked up across all users querying
+      the same location, not scoped to one user
+- [x] core-api: `lib/openweathermap.ts` — current weather, real 5-day/
+      3-hour forecast, geocoding, reverse-geocoding, and the moon-phase/
+      season calculations ported verbatim from v1's working math. All
+      calls happen server-side — v1 had a real OpenWeatherMap key hardcoded
+      in frontend source for geocoding, fixed here
+- [x] core-api: FishCast forecast route — cross-user cached by rounded
+      location + fish + water type + units, AI call via the shared
+      `lib/openrouter.ts` plumbing on a cheap paid model
+      (`nvidia/nemotron-3-ultra-550b-a55b` by default; the client plans to
+      supply a different AI provider/model separately, a one-line env var
+      swap once given). **Fixes a real v1 bug**: v1's cache key omitted
+      the user id even though the AI prompt was enriched with that user's
+      own catch history when Pro, leaking one user's personalized analysis
+      to every other user querying the same spot within the 12h TTL. v2's
+      cached AI response never includes personalization at all — a
+      separate, uncached, deterministic `personalNote` is computed
+      per-request from the caller's own catch history and appended outside
+      the cache
+- [x] core-api: catch-photo upload route, reusing `lib/storage.ts` with a
+      new `"catches"` category — makes real a `Catch.photoUrl` field that
+      existed in v1's schema but had no upload UI or upload code anywhere
+- [x] packages/sdk: `fishcast.ts` module (forecast, geocode,
+      reverseGeocode, uploadCatchPhoto)
+- [x] Vite+React+TS+Tailwind v4+vite-plugin-pwa scaffold under
+      `apps/fishcast` (port 5175) — uses vite-plugin-pwa's `generateSW`
+      strategy rather than Unstuck Daily/HabitFlow's `injectManifest`,
+      since FishCast has no push-notification feature requiring custom
+      service-worker code (see Future/Backlog below)
+- [x] Frontend: Forecast (location search with real-time geocoding, real
+      3-hour-bucket "golden window" heatmap instead of v1's single-
+      snapshot LLM-invented heatmap, bite score, lure picks, quick catch
+      logging), Saved Spots (new vs. v1 — a reusable list of favorite
+      locations), Catch Log (list + add form with a real photo upload),
+      Profile (stats, badges, units toggle)
+- [x] Badges/stats (`first_catch`/`streak_5`/`early_bird`/`sniper`/
+      `seasonal`, accuracy, streak, favorite species) ported verbatim from
+      v1's algorithm, computed client-side from the already-loaded
+      `AppUserData` blob instead of a dedicated server endpoint
+- [x] Monetization: matches Unstuck Daily/HabitFlow exactly — 5-day
+      full-access free trial, then the existing binary
+      `requireProductAccess()` gate. Replaces v1's binary `isPro` boolean +
+      Paddle webhook + Patreon-link upgrade flow entirely — no backend
+      change needed beyond reuse, same as HabitFlow's trial addition
+- [x] Seed: new `fishcast` Product row, priced to match Unstuck Daily/
+      HabitFlow ($7/mo, $70/yr)
+- [x] Design: v1's exact color palette (`#0B1426` background, `#0F1E36`
+      surface, `#0EA5E9` primary, `#F59E0B` accent/CTA, `#E2EAF4`
+      foreground, `#94B3CC` muted, Inter) kept verbatim per explicit client
+      instruction — no `ui-ux-pro-max` design pass for this app, unlike
+      Unstuck Daily/HabitFlow. FishCast is v2's first dark-by-default
+      mini-app
+
+**Known simplification**: `--color-on-primary` (the CTA button text color)
+was set to the dark background color rather than reproducing v1's likely
+white-on-amber pairing, since white-on-`#F59E0B` measures under WCAG AA's
+4.5:1 text-contrast minimum and dark-on-amber clears it comfortably — same
+six brand hex values as v1, just paired correctly. `--color-border` is
+similarly a new, slightly-lifted-navy value; v1 bordered inputs with the
+same color as their own background (functionally invisible).
+
 ## External Blocking Dependencies
 
 - **WesternBid API access**: requires opening a support ticket to obtain an API key;
@@ -298,6 +370,18 @@ timezones report the "today" boundary landing on the wrong day for them.
   deliberate "cheap paid model, not free tier" decision for HabitFlow's AI
   calls. Revisit only if the single-shot weekly digest proves insufficient
   in practice.
+
+- **FishCast: proactive push notifications on saved spots** — notify a
+  user when conditions turn favorable at one of their saved spots, without
+  them having to open the app and ask. Client explicitly declined for the
+  initial build (presented via `AskUserQuestion` alongside three other
+  proposed improvements, all approved; this one alone declined), citing
+  cost: unlike Unstuck Daily/HabitFlow's push reminders (a free JSONB
+  read on each scheduler tick), this would mean re-running paid weather +
+  AI calls for every saved spot of every user on every tick. Revisit only
+  if usage volume/spot count makes the cost justifiable, and consider
+  batching/coalescing spots that resolve to the same cache key before
+  building it.
 
 ## Change Log
 
@@ -507,3 +591,31 @@ timezones report the "today" boundary landing on the wrong day for them.
   (and its `TrialScreen`) into `apps/unstuck-daily`, with Unstuck-Daily-
   specific copy. Verified the existing demo account's `ACTIVE` subscription
   still grants access unaffected by the added state.
+- 2026-07-12 — Phase 6 (FishCast) implemented as a from-scratch rewrite of
+  v1's React+Vite+Express+Mongoose app, reusing v2's established
+  core-api/Postgres/Prisma stack and the same 5-day-trial monetization as
+  Unstuck Daily/HabitFlow. v1's exact color palette was kept verbatim per
+  explicit client instruction (the only mini-app so far to skip the
+  `ui-ux-pro-max` design pass). Direct source review of every v1 file (an
+  earlier pass in this session had wrongly assumed a vanilla-JS frontend;
+  corrected before planning) surfaced a real correctness bug worth fixing
+  rather than porting: v1's forecast cache key omitted the user id even
+  though the AI prompt included that user's own catch history when Pro,
+  meaning one user's personalized analysis could be served to a different
+  user querying the same spot within the 12h cache TTL. v2's
+  `FishCastForecastCache` never includes personalization in the cached
+  blob at all — it's computed per-request from the caller's own
+  `AppUserData` and appended outside the cache, which also incidentally
+  fixes the leak by construction rather than by a targeted patch. Also
+  fixed v1's hardcoded, publicly-exposed OpenWeatherMap API key (was in
+  frontend source) by proxying all weather/geocoding calls through
+  core-api, and made the `Catch.photoUrl` field real (existed in v1's
+  schema but had no upload UI or upload code anywhere) via a new
+  catch-photo upload route reusing `lib/storage.ts`. Client-approved
+  scope additions beyond v1: real 3-hour-bucket weather-forecast data
+  powering the "golden window" heatmap (v1 only ever called current-
+  conditions and had the AI invent a fake 24-value hourly heatmap from one
+  snapshot) and Saved Spots (a reusable favorite-locations list, not
+  present in v1). Proactive push notifications on saved spots were
+  proposed alongside those and explicitly declined for now — see
+  Future/Backlog.
