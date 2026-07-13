@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project overview
 
-UnstuckLabs v2 is a monorepo for a suite of independently-sold mini-app PWAs, each on its own subdomain of `unstucklabs.com`. It hosts three internal apps — **Store** (public marketing/catalog/checkout), **Admin** (internal, role-gated management panel), and **core-api** (shared backend all other apps talk to) — plus, over time, the mini-apps themselves. This is a from-scratch rewrite of v1 (archived at `github.com/EvgenJS/unstucklabs`), which had no shared auth, no shared design system, inconsistent tech versions per app, and an abandoned plan to build the store on an open-source CMS (Payload CMS v2 via the DigitalHippo template). v2 deliberately replaces that with a custom-built admin and a single shared backend.
+UnstuckLabs v2 is a monorepo for a suite of independently-sold mini-app PWAs, each on its own subdomain of `unstucklabs.store`. It hosts three internal apps — **Store** (public marketing/catalog/checkout), **Admin** (internal, role-gated management panel), and **core-api** (shared backend all other apps talk to) — plus, over time, the mini-apps themselves. This is a from-scratch rewrite of v1 (archived at `github.com/EvgenJS/unstucklabs`), which had no shared auth, no shared design system, inconsistent tech versions per app, and an abandoned plan to build the store on an open-source CMS (Payload CMS v2 via the DigitalHippo template). v2 deliberately replaces that with a custom-built admin and a single shared backend.
 
 ## Golden rule: consult docs/ROADMAP.md before adding scope
 
@@ -41,7 +41,7 @@ Mini-apps never talk to Postgres directly — only through core-api via `package
 
 ## Auth model
 
-Custom-built, not a third-party BaaS. core-api issues a short-lived JWT access token plus a long-lived refresh token stored in an **httpOnly cookie scoped to `.unstucklabs.com`**. This is what makes single sign-on work: log in once on the Store, and every mini-app subdomain recognizes the session. The cookie must use `sameSite: 'lax'` — v1 used `sameSite: 'strict'` on its refresh cookie, which does not survive cross-subdomain top-level navigation and would silently break SSO here. Use `secure: true` in production.
+Custom-built, not a third-party BaaS. core-api issues a short-lived JWT access token plus a long-lived refresh token stored in an **httpOnly cookie scoped to `.unstucklabs.store`**. This is what makes single sign-on work: log in once on the Store, and every mini-app subdomain recognizes the session. The cookie must use `sameSite: 'lax'` — v1 used `sameSite: 'strict'` on its refresh cookie, which does not survive cross-subdomain top-level navigation and would silently break SSO here. Use `secure: true` in production.
 
 ## Payments
 

@@ -16,11 +16,11 @@ export default function ContactPage() {
       </p>
 
       <a
-        href="mailto:hello@unstucklabs.com"
+        href="mailto:hello@unstucklabs.store"
         className="mt-8 flex w-fit items-center gap-2 font-semibold text-primary hover:text-primary/80"
       >
         <Mail className="h-5 w-5" aria-hidden="true" />
-        hello@unstucklabs.com
+        hello@unstucklabs.store
       </a>
 
       <div className="mt-10">

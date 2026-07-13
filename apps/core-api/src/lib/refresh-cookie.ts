@@ -2,7 +2,7 @@ import type { FastifyReply } from "fastify";
 
 export const REFRESH_COOKIE_NAME = "refresh_token";
 
-// domain scoped to the parent (e.g. ".unstucklabs.com") is what makes SSO
+// domain scoped to the parent (e.g. ".unstucklabs.store") is what makes SSO
 // work across the Store and every mini-app subdomain. sameSite MUST be
 // "lax", not "strict" -- v1 used "strict" on its refresh cookie, which does
 // not survive cross-subdomain top-level navigation and would silently break

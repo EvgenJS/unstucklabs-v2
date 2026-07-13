@@ -10,7 +10,7 @@ commands if you're on something else.
 
 ## 0. Before you start
 
-- [ ] A server with a public IP, SSH access, and a domain (`unstucklabs.com`)
+- [ ] A server with a public IP, SSH access, and a domain (`unstucklabs.store`)
       you control DNS for.
 - [ ] Postgres reachable from the server (self-hosted on the same box via
       Homebrew-equivalent/apt, or a managed instance — either works, this
@@ -26,13 +26,13 @@ commands if you're on something else.
 Point six A/AAAA records at the server's IP:
 
 ```
-unstucklabs.com
-www.unstucklabs.com
-admin.unstucklabs.com
-api.unstucklabs.com
-unstuck-daily.unstucklabs.com
-habitflow.unstucklabs.com
-fishcast.unstucklabs.com
+unstucklabs.store
+www.unstucklabs.store
+admin.unstucklabs.store
+api.unstucklabs.store
+unstuck-daily.unstucklabs.store
+habitflow.unstucklabs.store
+fishcast.unstucklabs.store
 ```
 
 (seven records, six unique subdomains — `www` and the apex both point at
@@ -74,7 +74,7 @@ cd /var/www/unstucklabs-v2
 ```
 
 If you clone somewhere other than `/var/www/unstucklabs-v2`, update the
-`root` paths in `deploy/nginx/{unstuck-daily,habitflow,fishcast}.unstucklabs.com.conf`
+`root` paths in `deploy/nginx/{unstuck-daily,habitflow,fishcast}.unstucklabs.store.conf`
 and the `cwd` paths in `ecosystem.config.js` to match.
 
 ## 4. Environment variables
@@ -96,23 +96,23 @@ Things that must change from the `.env.example` defaults:
 - `DATABASE_URL` — real Postgres credentials from step 2
 - `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET` — generate fresh
   (`openssl rand -hex 32`), never reuse the local-dev placeholder values
-- `COOKIE_DOMAIN=".unstucklabs.com"` — the leading dot is what makes the
+- `COOKIE_DOMAIN=".unstucklabs.store"` — the leading dot is what makes the
   refresh cookie visible across every subdomain (this is the whole SSO
   mechanism — see CLAUDE.md's Auth model)
 - `HOST="127.0.0.1"` (core-api) — see the comment in `src/server.ts`;
   Nginx is the only thing that should reach this port
 - `CORS_ORIGINS` (core-api) — comma-separated list of the real HTTPS
   origins, replacing the localhost defaults:
-  `https://unstucklabs.com,https://admin.unstucklabs.com,https://unstuck-daily.unstucklabs.com,https://habitflow.unstucklabs.com,https://fishcast.unstucklabs.com`
+  `https://unstucklabs.store,https://admin.unstucklabs.store,https://unstuck-daily.unstucklabs.store,https://habitflow.unstucklabs.store,https://fishcast.unstucklabs.store`
 - `VAPID_PUBLIC_KEY`/`VAPID_PRIVATE_KEY` — generate fresh with
   `npx web-push generate-vapid-keys`, don't reuse the dev pair
 - `OPENROUTER_API_KEY`, `HABITFLOW_OPENROUTER_API_KEY`,
   `FISHCAST_OPENROUTER_API_KEY`, `OPENWEATHERMAP_API_KEY` — real
   production keys
 - `apps/store/.env` and `apps/admin/.env` — `NEXT_PUBLIC_API_URL` should
-  point at `https://api.unstucklabs.com`
-- `apps/<mini-app>/.env.production` — `VITE_API_URL=https://api.unstucklabs.com`,
-  `VITE_STORE_URL=https://unstucklabs.com`, plus
+  point at `https://api.unstucklabs.store`
+- `apps/<mini-app>/.env.production` — `VITE_API_URL=https://api.unstucklabs.store`,
+  `VITE_STORE_URL=https://unstucklabs.store`, plus
   `VITE_VAPID_PUBLIC_KEY` (unstuck-daily/habitflow only) matching the
   production VAPID public key above
 
@@ -171,12 +171,12 @@ One cert per domain (matches what each config file in `deploy/nginx/`
 already references):
 
 ```bash
-sudo certbot --nginx -d unstucklabs.com -d www.unstucklabs.com
-sudo certbot --nginx -d admin.unstucklabs.com
-sudo certbot --nginx -d api.unstucklabs.com
-sudo certbot --nginx -d unstuck-daily.unstucklabs.com
-sudo certbot --nginx -d habitflow.unstucklabs.com
-sudo certbot --nginx -d fishcast.unstucklabs.com
+sudo certbot --nginx -d unstucklabs.store -d www.unstucklabs.store
+sudo certbot --nginx -d admin.unstucklabs.store
+sudo certbot --nginx -d api.unstucklabs.store
+sudo certbot --nginx -d unstuck-daily.unstucklabs.store
+sudo certbot --nginx -d habitflow.unstucklabs.store
+sudo certbot --nginx -d fishcast.unstucklabs.store
 ```
 
 Certbot auto-renews via its own systemd timer (`certbot.timer`) — nothing
@@ -205,11 +205,11 @@ pm2 logs core-api --lines 50
 
 ## 9. Verify
 
-- `https://unstucklabs.com` loads the Store
-- `https://admin.unstucklabs.com` loads the Admin login
-- `https://api.unstucklabs.com/health` returns `{"status":"ok"}`
-- `https://unstuck-daily.unstucklabs.com`, `https://habitflow.unstucklabs.com`,
-  `https://fishcast.unstucklabs.com` each load their mini-app shell
+- `https://unstucklabs.store` loads the Store
+- `https://admin.unstucklabs.store` loads the Admin login
+- `https://api.unstucklabs.store/health` returns `{"status":"ok"}`
+- `https://unstuck-daily.unstucklabs.store`, `https://habitflow.unstucklabs.store`,
+  `https://fishcast.unstucklabs.store` each load their mini-app shell
 - Log in on the Store, then open a mini-app in another tab — it should
   recognize the session without a second login (proves `COOKIE_DOMAIN` and
   CORS are both configured correctly)

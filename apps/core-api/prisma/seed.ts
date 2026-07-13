@@ -57,7 +57,7 @@ async function main() {
     update: {},
   });
 
-  const adminEmail = process.env.SEED_ADMIN_EMAIL ?? "admin@unstucklabs.com";
+  const adminEmail = process.env.SEED_ADMIN_EMAIL ?? "admin@unstucklabs.store";
   const adminPassword = process.env.SEED_ADMIN_PASSWORD ?? "change-me-please";
 
   const admin = await prisma.user.upsert({
