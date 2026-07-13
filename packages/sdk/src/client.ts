@@ -1,5 +1,5 @@
 export interface ApiClientConfig {
-  /** e.g. "http://localhost:3001" in dev, "https://api.unstucklabs.com" in prod. */
+  /** e.g. "http://localhost:3001" in dev, "https://api.unstucklabs.store" in prod. */
   baseUrl: string;
   /** Bearer access token, when calling on behalf of an authenticated user. */
   accessToken?: string;

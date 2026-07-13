@@ -13,7 +13,7 @@ function launchUrl(subdomain: string | null) {
   if (!subdomain) return null;
   // Mini-apps aren't deployed yet (Phase 4+) -- this constructs the intended
   // production URL shape so the link is correct once they exist.
-  return `https://${subdomain}.unstucklabs.com`;
+  return `https://${subdomain}.unstucklabs.store`;
 }
 
 export default function AccountPage() {

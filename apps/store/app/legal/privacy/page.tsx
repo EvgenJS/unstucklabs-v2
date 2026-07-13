@@ -50,7 +50,7 @@ export default function PrivacyPage() {
 
         <h2>6. Contact</h2>
         <p>
-          Questions about this policy — email <a href="mailto:hello@unstucklabs.com">hello@unstucklabs.com</a>.
+          Questions about this policy — email <a href="mailto:hello@unstucklabs.store">hello@unstucklabs.store</a>.
         </p>
       </div>
     </div>

@@ -26,7 +26,7 @@ export default function RefundPolicyPage() {
 
         <h2>How to request a refund</h2>
         <p>
-          Email <a href="mailto:hello@unstucklabs.com">hello@unstucklabs.com</a> or use the{" "}
+          Email <a href="mailto:hello@unstucklabs.store">hello@unstucklabs.store</a> or use the{" "}
           <a href="/contact">contact form</a> with the email address you purchased under. Refunds are
           processed back to your original payment method.
         </p>
