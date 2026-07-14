@@ -1,7 +1,13 @@
-@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap");
 @import "tailwindcss";
 @import "../../../packages/ui/src/tokens.css";
 @plugin "@tailwindcss/typography";
+
+/* Overrides packages/ui's --font-sans (a bare Google Fonts family name) with
+   the next/font-generated local font stack set up in layout.tsx -- avoids
+   the render-blocking @import this used to pull from fonts.googleapis.com. */
+:root {
+  --font-sans: var(--font-plus-jakarta-sans), ui-sans-serif, system-ui, sans-serif;
+}
 
 body {
   background: var(--color-background);

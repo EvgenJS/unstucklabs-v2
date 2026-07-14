@@ -1,11 +1,7 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { getApiClient } from "../../lib/api";
-
-export const metadata: Metadata = {
-  title: "Blog",
-  description: "Notes on productivity, task paralysis, and building small tools that actually help.",
-};
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
 
@@ -15,6 +11,17 @@ function resolveCoverUrl(url: string): string {
 
 interface Props {
   searchParams: Promise<{ page?: string }>;
+}
+
+export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
+  const { page: pageParam } = await searchParams;
+  const page = Math.max(1, Number(pageParam) || 1);
+
+  return {
+    title: "Blog",
+    description: "Notes on productivity, task paralysis, and building small tools that actually help.",
+    alternates: { canonical: page > 1 ? `/blog?page=${page}` : "/blog" },
+  };
 }
 
 export default async function BlogPage({ searchParams }: Props) {
@@ -36,12 +43,15 @@ export default async function BlogPage({ searchParams }: Props) {
             <article key={post.id}>
               <Link href={`/blog/${post.slug}`}>
                 {post.coverImageUrl && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={resolveCoverUrl(post.coverImageUrl)}
-                    alt={post.title}
-                    className="mb-3 h-48 w-full rounded-xl object-cover"
-                  />
+                  <div className="relative mb-3 h-48 w-full overflow-hidden rounded-xl">
+                    <Image
+                      src={resolveCoverUrl(post.coverImageUrl)}
+                      alt={post.title}
+                      fill
+                      sizes="(min-width: 768px) 768px, 100vw"
+                      className="object-cover"
+                    />
+                  </div>
                 )}
                 <h2 className="text-xl font-semibold text-foreground hover:text-primary">{post.title}</h2>
               </Link>

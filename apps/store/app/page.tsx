@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { Hero } from "../components/landing/Hero";
 import { PainPoints } from "../components/landing/PainPoints";
 import { ValueProps } from "../components/landing/ValueProps";
@@ -10,6 +11,10 @@ import { FinalCta } from "../components/landing/FinalCta";
 // baking a snapshot in at build time (self-hosted persistent server, no
 // ISR/serverless infra, see CLAUDE.md).
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+};
 
 export default function HomePage() {
   return (

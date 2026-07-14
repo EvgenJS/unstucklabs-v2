@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Shipping Policy",
+  alternates: { canonical: "/legal/shipping-policy" },
 };
 
 export default function ShippingPolicyPage() {

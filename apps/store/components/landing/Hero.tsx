@@ -1,15 +1,11 @@
+import Image from "next/image";
 import { Card } from "@unstucklabs/ui";
 import { WaitlistForm } from "../WaitlistForm";
 
 export function Hero() {
   return (
     <section className="relative overflow-hidden">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src="/hero-focus.jpg"
-        alt=""
-        className="absolute inset-0 h-full w-full object-cover"
-      />
+      <Image src="/hero-focus.jpg" alt="" fill priority sizes="100vw" className="object-cover" />
       <div className="absolute inset-0 bg-gradient-to-b from-foreground/90 via-foreground/85 to-foreground/75" />
       <div className="relative mx-auto max-w-3xl px-6 pt-20 pb-16 text-center">
         <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl">

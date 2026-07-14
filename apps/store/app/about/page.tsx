@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "About",
   description: "Why UnstuckLabs exists and who's behind it.",
+  alternates: { canonical: "/about" },
 };
 
 export default function AboutPage() {

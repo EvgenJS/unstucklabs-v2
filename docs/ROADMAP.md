@@ -340,6 +340,67 @@ six brand hex values as v1, just paired correctly. `--color-border` is
 similarly a new, slightly-lifted-navy value; v1 bordered inputs with the
 same color as their own background (functionally invisible).
 
+## SEO / GEO (Store)
+
+Run via the `seo-geo` skill against the live Store, targeting both
+classic SEO and citability in AI answer engines (Google AI Overviews,
+ChatGPT, Perplexity).
+
+- [x] `robots.ts` (Store): explicit allow rules for AI crawlers (GPTBot,
+      ChatGPT-User, PerplexityBot, ClaudeBot, Google-Extended, CCBot,
+      Applebot-Extended) alongside the existing `*` rule
+- [x] `apps/admin/app/robots.ts` (new): blocks all crawling outright —
+      Admin is internal/role-gated and had no robots.txt route before this,
+      relying only on the page-level `noindex` meta tag (which doesn't stop
+      crawling itself, only indexing after a fetch)
+- [x] `llms.txt` route (`apps/store/app/llms.txt/route.ts`, new) — a
+      generated (not static) content map for AI crawlers/agents, per the
+      llmstxt.org convention, listing active apps and published posts so it
+      stays in sync with the catalog automatically
+- [x] JSON-LD structured data: `Organization`/`WebSite` (root layout),
+      `FAQPage` (/faq), `BlogPosting` (blog posts, attributed to the real
+      founder as a Person, not a generic Organization), `Product` (app
+      detail pages, with real price/currency/availability)
+- [x] Self-hosted `Plus Jakarta Sans` via `next/font/google` (replaces the
+      old render-blocking `@import` in `globals.css`)
+- [x] `next/image` migration for all remaining `<img>` tags (blog cards,
+      blog post cover, app catalog, app detail gallery, account page,
+      landing hero/preview) — real `sizes`, no more `eslint-disable`
+      no-img-element escapes
+- [x] `alternates.canonical` added to every static/dynamic Store page
+- [x] `lib/markdown.ts` (new) — strips Markdown down to plain text for
+      JSON-LD `description`/`headline` fields, and a `toMetaDescription()`
+      helper that truncates on a word boundary instead of mid-word
+
+**Deliberately not done, and why** (all confirmed correct, not oversights):
+- **CSP**: still absent everywhere. Each app's own script/style sources
+  differ too much for one shared policy; would need to be scoped per app,
+  not bundled into this pass.
+- **Cache-Control on `/` and `/apps`**: both are `force-dynamic` for an
+  existing architectural reason (see the comment in `app/page.tsx`) — any
+  caching layer for them belongs at Nginx, not in Next.js code.
+- **FAQ/blog content length and wording**: an agent flagged some FAQ
+  answers as shorter than the optimal range for AI-answer citation, but
+  left the text alone — that's editorial judgment on someone else's
+  authored copy, not a code change.
+- **`sameAs` (social profiles) in the `Organization` schema**: no real
+  social profiles exist yet post-launch — left out rather than filled with
+  placeholder URLs. Add real ones once they exist.
+- **Named blog post authors** (would let `BlogPosting` JSON-LD attribute
+  each post individually instead of always to the one founder): needs a
+  new `BlogPost` column + migration + Admin CRUD form change — a real
+  cross-module task, not a Store-only SEO patch. Not started; revisit as
+  its own task if/when multiple authors are actually publishing.
+
+**Note on `next.config.ts` security headers**: `X-Content-Type-Options`/
+`X-Frame-Options`/`Referrer-Policy`/`Permissions-Policy` were already set
+at the Next.js layer in both Store and Admin (predating this SEO pass).
+These now duplicate what `deploy/nginx/snippets/security-headers.conf`
+already sets in production (including HSTS, which Nginx sets but
+Next.js deliberately doesn't) — harmless defense-in-depth, kept because
+they still matter when either app is run standalone without Nginx in
+front (e.g. `next dev`).
+
 ## Deployment
 
 **Live in production** on `unstucklabs.store` (all 6 subdomains) since
