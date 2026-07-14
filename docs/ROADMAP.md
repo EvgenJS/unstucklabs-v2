@@ -342,18 +342,24 @@ same color as their own background (functionally invisible).
 
 ## Deployment
 
-Nginx + PM2 configs for the self-hosted single-server deployment described
-in CLAUDE.md now exist under `deploy/` — `ecosystem.config.js` (repo root,
-PM2 process defs for core-api/store/admin) and `deploy/nginx/*.conf` (one
-server block per subdomain, plus shared snippets). Full walkthrough (DNS,
-certbot, `pnpm build`, `prisma migrate deploy`, PM2 startup) in
-`deploy/DEPLOYMENT.md`. Not yet exercised against a real server — the
-configs are written and internally consistent (ports/paths cross-checked
-against `package.json` scripts and each app's actual build output) but
-unverified end-to-end until an actual deploy happens. WesternBid is **not**
-required to deploy; the site runs fully on `NullPaymentProvider` until
-that's granted (see External Blocking Dependencies below) — real checkout
-is the only thing that won't work.
+**Live in production** on `unstucklabs.store` (all 6 subdomains) since
+2026-07-13. Nginx + PM2 configs for the self-hosted single-server
+deployment described in CLAUDE.md live under `deploy/` —
+`ecosystem.config.js` (repo root, PM2 process defs for
+core-api/store/admin) and `deploy/nginx/*.conf` (one server block per
+subdomain, plus shared snippets, including `Strict-Transport-Security`).
+Full walkthrough in `deploy/DEPLOYMENT.md`. v1 was fully decommissioned as
+part of this cutover (old PM2 processes stopped, old nginx sites removed,
+old certs revoked) — see the Change Log for the full sequence, including
+two real compatibility bugs the actual server surfaced (nginx 1.24's
+`http2` directive syntax, PM2's interpreter handling of pnpm's shell-script
+`next` binary) that only showed up once genuinely deployed, not in local
+dev. Every change since the initial cutover (security fixes, password
+reset, branded emails, etc.) has gone through the same build → migrate →
+PM2 restart cycle on the real server, not just committed to git.
+WesternBid is **not** required to run — the site runs fully on
+`NullPaymentProvider` until that's granted (see External Blocking
+Dependencies below) — real checkout is the only thing that won't work.
 
 ## Email Verification
 
