@@ -42,6 +42,20 @@ export function createAuthModule(config: ApiClientConfig) {
       });
     },
 
+    forgotPassword(email: string) {
+      return apiRequest<{ message: string }>(config, "/auth/forgot-password", {
+        method: "POST",
+        body: JSON.stringify({ email }),
+      });
+    },
+
+    resetPassword(token: string, password: string) {
+      return apiRequest<AuthResult>(config, "/auth/reset-password", {
+        method: "POST",
+        body: JSON.stringify({ token, password }),
+      });
+    },
+
     refresh() {
       return apiRequest<AuthResult>(config, "/auth/refresh", { method: "POST" });
     },

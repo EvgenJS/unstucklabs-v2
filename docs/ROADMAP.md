@@ -373,6 +373,22 @@ without a real `RESEND_API_KEY` set, the verification link is printed to
 core-api's terminal output instead of sent, so the flow is fully testable
 without Resend access.
 
+## Password Reset
+
+`POST /auth/forgot-password` (email in, always a generic 202 response --
+same anti-enumeration shape as `resendVerification`) emails a 1h single-use
+token (`PASSWORD_RESET_TOKEN_HOURS`, deliberately shorter than email
+verification's 24h since a live reset link is more sensitive); `POST
+/auth/reset-password` consumes it, hashes the new password, and auto-logs
+the user in via the same refresh-cookie mechanism `verifyEmail` uses.
+Consuming the token also bumps `User.tokenVersion`, invalidating every
+existing session for that account -- a password reset is exactly the
+moment a stale/possibly-compromised session should stop working, same
+tokenVersion mechanism the logout fix added. Verified live: reset flips
+the password (old password rejected, new one accepted immediately after),
+the token can't be replayed, and a garbage/expired token cleanly shows an
+"invalid or expired" state with an inline way to request a new link.
+
 ## External Blocking Dependencies
 
 - **WesternBid API access**: requires opening a support ticket to obtain an API key;
