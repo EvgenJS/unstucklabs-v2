@@ -413,11 +413,17 @@ at user request. Four landed; one is a draft awaiting review.
   a visible byline on the post page.
 - [x] **Cache-Control on `/` and `/apps`**: added at the Nginx layer
   (`deploy/nginx/snippets/store-cache.conf`, 30s `proxy_cache` +
-  stale-while-revalidate), matching the original "belongs at Nginx"
-  call. Needs a one-time manual step server-side (`proxy_cache_path` can
-  only live in `nginx.conf`'s `http{}` block, not a sites-enabled file —
-  see `deploy/DEPLOYMENT.md`'s Nginx section) — **not yet applied to the
-  live server**, only committed to the repo.
+  stale-while-revalidate), matching the original "belongs at Nginx" call.
+  Live on the server: cache zone dropped into `/etc/nginx/conf.d/`
+  (already `include`d from stock `nginx.conf`'s `http{}`, no hand-edit of
+  the shared file needed) and confirmed working (`X-Cache-Status:
+  MISS` → `HIT` on repeat requests, other Store routes correctly
+  uncached, `admin`/`api`/the unrelated `betting-advisor` PM2 process all
+  unaffected). One real bug caught and fixed live: Next.js sends
+  `Cache-Control: no-store` on these `force-dynamic` routes, which
+  `proxy_cache` honors by default — every request was silently a `MISS`
+  until `proxy_ignore_headers Cache-Control Expires Set-Cookie;` was
+  added.
 - [x] **`sameAs` infrastructure**: `apps/store/lib/social.ts` (Threads, X,
   TikTok, Instagram, YouTube — all empty `href`s right now) feeds both a
   Footer icon row and the Organization JSON-LD `sameAs`; both
