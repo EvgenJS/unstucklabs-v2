@@ -372,26 +372,6 @@ ChatGPT, Perplexity).
       JSON-LD `description`/`headline` fields, and a `toMetaDescription()`
       helper that truncates on a word boundary instead of mid-word
 
-**Deliberately not done, and why** (all confirmed correct, not oversights):
-- **CSP**: still absent everywhere. Each app's own script/style sources
-  differ too much for one shared policy; would need to be scoped per app,
-  not bundled into this pass.
-- **Cache-Control on `/` and `/apps`**: both are `force-dynamic` for an
-  existing architectural reason (see the comment in `app/page.tsx`) — any
-  caching layer for them belongs at Nginx, not in Next.js code.
-- **FAQ/blog content length and wording**: an agent flagged some FAQ
-  answers as shorter than the optimal range for AI-answer citation, but
-  left the text alone — that's editorial judgment on someone else's
-  authored copy, not a code change.
-- **`sameAs` (social profiles) in the `Organization` schema**: no real
-  social profiles exist yet post-launch — left out rather than filled with
-  placeholder URLs. Add real ones once they exist.
-- **Named blog post authors** (would let `BlogPosting` JSON-LD attribute
-  each post individually instead of always to the one founder): needs a
-  new `BlogPost` column + migration + Admin CRUD form change — a real
-  cross-module task, not a Store-only SEO patch. Not started; revisit as
-  its own task if/when multiple authors are actually publishing.
-
 **Note on `next.config.ts` security headers**: `X-Content-Type-Options`/
 `X-Frame-Options`/`Referrer-Policy`/`Permissions-Policy` were already set
 at the Next.js layer in both Store and Admin (predating this SEO pass).
@@ -400,6 +380,58 @@ already sets in production (including HSTS, which Nginx sets but
 Next.js deliberately doesn't) — harmless defense-in-depth, kept because
 they still matter when either app is run standalone without Nginx in
 front (e.g. `next dev`).
+
+### Follow-up pass (2026-07-14, same day)
+
+The five items above marked "deliberately not done" were revisited same-day
+at user request. Four landed; one is a draft awaiting review.
+
+- [x] **CSP**, both apps, via `middleware.ts` (nonce + `'strict-dynamic'`,
+  no `'unsafe-inline'`/`'unsafe-eval'` in production). Real bug caught in
+  local production-build testing before this ever reached the server:
+  Next's own inline RSC-hydration scripts (`self.__next_f.push(...)`) need
+  the nonce Next reads back off the request's `Content-Security-Policy`
+  header, which **only reaches statically-prerendered pages if they're
+  forced dynamic** — Admin was 100% static (no page there calls a dynamic
+  API), so nonces never made it into the HTML, `'strict-dynamic'` then
+  drops the `'self'` fallback, and every script silently failed to
+  execute (client-side auth redirect from `/` to `/login` never fired —
+  admin/app/layout.tsx now has `export const dynamic = "force-dynamic"`,
+  same reasoning as Store's homepage). Verified after the fix: direct
+  loads, client-side `<Link>` transitions to both static and dynamic Store
+  routes, and a real login POST all work under the new policy. Store's
+  `style-src` keeps `'unsafe-inline'` (next/image `fill` sets a real
+  inline `style` attribute CSP has no nonce mechanism for); Admin's
+  doesn't need it (no `fill` usage there).
+- [x] **Named blog post authors**: `BlogPost.authorName` (plain string,
+  `@default("Yevhen Spatar")`, not a `User` relation — posts aren't
+  necessarily written by a registered account) + migration
+  `20260714134523_add_blog_post_author_name`, threaded through
+  `blog.routes.ts`/`blog.admin.routes.ts`, `BlogPostInput`/`BlogPostSummary`
+  in `packages/sdk`, `BlogPostForm.tsx` (new required field, defaults to
+  the founder's name for new posts), and Store's `BlogPosting.author` +
+  a visible byline on the post page.
+- [x] **Cache-Control on `/` and `/apps`**: added at the Nginx layer
+  (`deploy/nginx/snippets/store-cache.conf`, 30s `proxy_cache` +
+  stale-while-revalidate), matching the original "belongs at Nginx"
+  call. Needs a one-time manual step server-side (`proxy_cache_path` can
+  only live in `nginx.conf`'s `http{}` block, not a sites-enabled file —
+  see `deploy/DEPLOYMENT.md`'s Nginx section) — **not yet applied to the
+  live server**, only committed to the repo.
+- [x] **`sameAs` infrastructure**: `apps/store/lib/social.ts` (Threads, X,
+  TikTok, Instagram, YouTube — all empty `href`s right now) feeds both a
+  Footer icon row and the Organization JSON-LD `sameAs`; both
+  automatically skip anything empty. Confirmed working end-to-end with a
+  temporary test URL, then reverted to empty. Still correctly **not**
+  populated with real links — fill in `lib/social.ts` once the accounts
+  exist, nothing else to wire up.
+- [ ] **FAQ answer length**: two answers (bundle/pricing-model, subscription
+  vs. one-time) got expanded drafts in `apps/store/app/faq/page.tsx`,
+  marked `// DRAFT` in a comment — written, not yet reviewed/approved as
+  final copy. The pricing-model one states "$7/month" as a concrete
+  example, accurate as of 2026-07-14 for all three live apps (Unstuck
+  Daily, HabitFlow, FishCast) but will go stale whenever pricing changes —
+  update or cut that detail then, don't let it drift.
 
 ## Deployment
 
@@ -498,6 +530,31 @@ the token can't be replayed, and a garbage/expired token cleanly shows an
   if usage volume/spot count makes the cost justifiable, and consider
   batching/coalescing spots that resolve to the same cache key before
   building it.
+
+- **SEO/GEO: broaden audit scope past the 2026-07-14 Store-only pass** (see
+  the "SEO / GEO (Store)" section above). Not done, not currently planned —
+  revisit each when the trigger condition below is actually true:
+  - **Admin / core-api**: only robots.txt + security headers were checked
+    (correctly — Admin is role-gated and shouldn't rank, core-api is a JSON
+    backend with no HTML surface). No full audit needed unless that changes.
+  - **The three mini-apps** (Unstuck Daily, HabitFlow, FishCast): not
+    touched at all — separate Vite PWAs on their own subdomains, out of
+    scope for a Store-only pass. Each would need its own audit once/if
+    they're meant to be independently discoverable (most mini-app traffic
+    is expected to arrive via Store links, not organic/AI search directly).
+  - **Unused `claude-seo` sub-skills**: `seo-visual` (screenshots/mobile
+    rendering), `seo-sxo` (search-intent/persona mismatch analysis),
+    `seo-cluster` (topic-cluster content architecture), `seo-image-gen`
+    (OG image quality), `seo-google`/`seo-dataforseo` (need real GSC/GA4/
+    DataForSEO credentials — not configured), `seo-backlinks` (moot
+    pre-launch, zero backlinks exist yet). Revisit `seo-google`/
+    `seo-dataforseo`/`seo-backlinks` once there's real traffic/links to
+    measure; the others can run any time someone wants that specific lens.
+  - **Not fixable by a code change at all**: actual search/AI-answer
+    rankings, real backlinks, field Core Web Vitals (CrUX) — all require
+    real traffic/time post-launch, not more engineering. Blog content is
+    currently 1-2 draft/stub posts, not citation-ready material — that's a
+    content-writing backlog item, not an SEO code fix.
 
 ## Change Log
 

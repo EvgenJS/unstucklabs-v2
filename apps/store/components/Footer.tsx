@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { WaitlistForm } from "./WaitlistForm";
+import { SocialIcon } from "./SocialIcons";
+import { getActiveSocialLinks } from "../lib/social";
 
 const columns = [
   {
@@ -29,6 +31,8 @@ const columns = [
 ];
 
 export function Footer() {
+  const social = getActiveSocialLinks();
+
   return (
     <footer className="border-t border-border bg-white">
       <div className="mx-auto max-w-6xl px-6 py-12">
@@ -38,6 +42,22 @@ export function Footer() {
             <p className="mt-2 max-w-xs text-sm text-foreground/70">
               Small, focused tools for getting unstuck — built by someone who needed them too.
             </p>
+            {social.length > 0 && (
+              <div className="mt-4 flex gap-4">
+                {social.map((link) => (
+                  <a
+                    key={link.name}
+                    href={link.href}
+                    target="_blank"
+                    rel="me noopener noreferrer"
+                    aria-label={link.name}
+                    className="text-foreground/60 transition-colors duration-200 hover:text-primary"
+                  >
+                    <SocialIcon name={link.name} className="h-5 w-5" />
+                  </a>
+                ))}
+              </div>
+            )}
           </div>
           {columns.map((column) => (
             <div key={column.title}>

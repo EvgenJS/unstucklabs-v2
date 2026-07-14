@@ -13,6 +13,7 @@ const createPostSchema = z.object({
   coverImageUrl: z.string().url().optional(),
   seoTitle: z.string().optional(),
   seoDescription: z.string().optional(),
+  authorName: z.string().min(1).optional(),
 });
 
 const updatePostSchema = createPostSchema.partial().extend({

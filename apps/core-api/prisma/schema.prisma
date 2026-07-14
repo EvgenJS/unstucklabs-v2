@@ -232,6 +232,10 @@ model BlogPost {
   publishedAt    DateTime?
   seoTitle       String?
   seoDescription String?
+  // Plain text, not a User relation -- posts aren't necessarily written by
+  // a registered account (e.g. a future guest author), and there's no need
+  // for a join just to render a byline / BlogPosting JSON-LD author.
+  authorName     String         @default("Yevhen Spatar")
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
 

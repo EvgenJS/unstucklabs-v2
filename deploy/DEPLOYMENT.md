@@ -154,6 +154,22 @@ for f in deploy/nginx/*.conf; do
 done
 ```
 
+**One-time manual step**: `store-cache-zone.conf` declares a `proxy_cache_path`,
+which Nginx only allows directly inside the `http{}` block -- not inside a
+`server{}` block, so it can't just live in sites-enabled/ like the others.
+Add this line inside `http{}` in `/etc/nginx/nginx.conf` (once; it's not
+repo-tracked and isn't touched by any later `git pull` + reload):
+
+```
+include /etc/nginx/snippets/store-cache-zone.conf;
+```
+
+Also create the cache directory it references: `sudo mkdir -p /var/cache/nginx/store`.
+Skipping this step means Store's `/` and `/apps` cache directives
+(`store-cache.conf`) will fail `nginx -t` with an unknown-zone error --
+either add the include above first, or drop the two `store-cache.conf`
+includes from `unstucklabs.store.conf` if you don't want this caching layer.
+
 Each site config's HTTPS `server` block references a cert that doesn't
 exist yet — Nginx won't start like this. Comment out (or temporarily
 delete) the `listen 443` blocks for a first `nginx -t` + reload with
