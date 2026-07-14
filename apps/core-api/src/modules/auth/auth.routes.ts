@@ -110,7 +110,15 @@ export async function authRoutes(fastify: FastifyInstance) {
     }
   });
 
-  fastify.post("/auth/logout", async (_request, reply) => {
+  fastify.post("/auth/logout", async (request, reply) => {
+    const token = request.cookies[REFRESH_COOKIE_NAME];
+    if (token) {
+      // Bumps the user's tokenVersion so this exact refresh token (and any
+      // stolen/leaked copy of it) stops working immediately, instead of
+      // remaining valid for the rest of its 30-day TTL after the cookie is
+      // cleared client-side. See auth.service.ts's invalidateSessions.
+      await authService.invalidateSessions(token);
+    }
     clearRefreshCookie(reply);
     return reply.code(204).send();
   });

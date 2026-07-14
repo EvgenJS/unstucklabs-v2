@@ -57,6 +57,17 @@ model User {
   emailVerificationToken   String?
   emailVerificationExpires DateTime?
 
+  // Refresh tokens are stateless JWTs with no DB-backed session table --
+  // this counter is the server-side revocation mechanism. Embedded in every
+  // signed refresh token; /auth/refresh rejects a token whose embedded
+  // value doesn't match the current one. Bumped on logout, so a
+  // stolen/leaked refresh token stops working the moment the real user
+  // logs out, instead of staying valid for the rest of its 30-day TTL.
+  // One counter per user (not per-device) -- logout invalidates every
+  // session for that account, a deliberate simplification over a full
+  // per-device session table.
+  tokenVersion Int @default(0)
+
   // Admin RBAC: absence of a Membership row means "not an admin user".
   memberships          Membership[]
   subscriptions        Subscription[]

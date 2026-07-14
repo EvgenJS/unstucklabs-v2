@@ -73,7 +73,7 @@ export function createAuthService(prisma: PrismaClient) {
       return {
         user,
         accessToken: signAccessToken(user.id),
-        refreshToken: signRefreshToken(user.id),
+        refreshToken: signRefreshToken(user.id, user.tokenVersion),
       };
     },
 
@@ -98,7 +98,7 @@ export function createAuthService(prisma: PrismaClient) {
       return {
         user: verified,
         accessToken: signAccessToken(verified.id),
-        refreshToken: signRefreshToken(verified.id),
+        refreshToken: signRefreshToken(verified.id, verified.tokenVersion),
       };
     },
 
@@ -132,11 +132,38 @@ export function createAuthService(prisma: PrismaClient) {
       const user = await prisma.user.findUnique({ where: { id: payload.sub } });
       if (!user) throw new InvalidRefreshTokenError();
 
+      // Rejects a token that's structurally valid (correct signature, not
+      // expired) but was issued before the user's last logout -- the
+      // server-side revocation check. See schema.prisma's tokenVersion
+      // comment.
+      if (payload.tokenVersion !== user.tokenVersion) {
+        throw new InvalidRefreshTokenError();
+      }
+
       return {
         user,
         accessToken: signAccessToken(user.id),
-        refreshToken: signRefreshToken(user.id),
+        refreshToken: signRefreshToken(user.id, user.tokenVersion),
       };
+    },
+
+    // Best-effort: called with whatever refresh token cookie is present,
+    // even an expired/near-expired one, since the whole point is to make
+    // sure that exact token (and any other copy of it) stops working. If
+    // the token doesn't verify at all, there's no session to invalidate --
+    // the route clears the cookie either way.
+    async invalidateSessions(refreshToken: string) {
+      let payload;
+      try {
+        payload = verifyRefreshToken(refreshToken);
+      } catch {
+        return;
+      }
+
+      await prisma.user.update({
+        where: { id: payload.sub },
+        data: { tokenVersion: { increment: 1 } },
+      });
     },
 
     async me(userId: string) {
