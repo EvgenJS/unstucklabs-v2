@@ -16,6 +16,9 @@ interface AuthContextValue {
   // Consumes a verify-email token and, on success, logs the user in --
   // core-api's /auth/verify-email issues a real session on success.
   verifyEmail: (token: string) => Promise<void>;
+  // Consumes a reset-password token and, on success, logs the user in --
+  // same auto-login shape as verifyEmail above.
+  resetPassword: (token: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -72,6 +75,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(me);
   }
 
+  async function resetPassword(token: string, password: string) {
+    const result = await getApiClient().auth.resetPassword(token, password);
+    setAccessToken(result.accessToken);
+    const me = await getApiClient(result.accessToken).auth.me();
+    setUser(me);
+  }
+
   async function logout() {
     await getApiClient(accessToken ?? undefined).auth.logout();
     setUser(null);
@@ -79,7 +89,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, accessToken, loading, login, register, verifyEmail, logout }}>
+    <AuthContext.Provider
+      value={{ user, accessToken, loading, login, register, verifyEmail, resetPassword, logout }}
+    >
       {children}
     </AuthContext.Provider>
   );

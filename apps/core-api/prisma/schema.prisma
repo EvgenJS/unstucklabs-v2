@@ -57,6 +57,15 @@ model User {
   emailVerificationToken   String?
   emailVerificationExpires DateTime?
 
+  // Forgot-password flow -- same shape as email verification (random token
+  // + expiry), but a shorter TTL (see PASSWORD_RESET_TOKEN_HOURS) since a
+  // live password-reset link is more sensitive than an email-confirmation
+  // one. Consuming it also bumps tokenVersion, invalidating every existing
+  // session -- a reset is exactly the moment a stale/possibly-compromised
+  // session should stop working.
+  passwordResetToken   String?
+  passwordResetExpires DateTime?
+
   // Refresh tokens are stateless JWTs with no DB-backed session table --
   // this counter is the server-side revocation mechanism. Embedded in every
   // signed refresh token; /auth/refresh rejects a token whose embedded

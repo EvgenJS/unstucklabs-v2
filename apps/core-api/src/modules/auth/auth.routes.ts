@@ -7,6 +7,7 @@ import {
   InvalidRefreshTokenError,
   EmailNotVerifiedError,
   InvalidVerificationTokenError,
+  InvalidResetTokenError,
 } from "./auth.service.js";
 import { REFRESH_COOKIE_NAME, setRefreshCookie, clearRefreshCookie } from "../../lib/refresh-cookie.js";
 
@@ -21,6 +22,11 @@ const emailSchema = z.object({
 
 const tokenSchema = z.object({
   token: z.string().min(1),
+});
+
+const resetPasswordSchema = z.object({
+  token: z.string().min(1),
+  password: z.string().min(8),
 });
 
 function serializeUser(user: { id: string; email: string; createdAt: Date }) {
@@ -89,6 +95,30 @@ export async function authRoutes(fastify: FastifyInstance) {
     // Always the same response, whether or not the account exists or was
     // already verified -- see resendVerification()'s own comment.
     return reply.code(202).send({ message: "If that account exists, a verification email is on its way." });
+  });
+
+  fastify.post("/auth/forgot-password", { config: authRateLimit }, async (request, reply) => {
+    const body = emailSchema.parse(request.body);
+    await authService.forgotPassword(body.email);
+    // Always the same response, whether or not the account exists -- see
+    // forgotPassword()'s own comment (same anti-enumeration shape as
+    // /auth/resend-verification above).
+    return reply.code(202).send({ message: "If that account exists, a password reset email is on its way." });
+  });
+
+  fastify.post("/auth/reset-password", { config: authRateLimit }, async (request, reply) => {
+    const body = resetPasswordSchema.parse(request.body);
+
+    try {
+      const { user, accessToken, refreshToken } = await authService.resetPassword(body.token, body.password);
+      setRefreshCookie(reply, refreshToken);
+      return reply.send({ user: serializeUser(user), accessToken });
+    } catch (err) {
+      if (err instanceof InvalidResetTokenError) {
+        return reply.code(400).send({ error: "This reset link is invalid or has expired." });
+      }
+      throw err;
+    }
   });
 
   fastify.post("/auth/refresh", { config: authRateLimit }, async (request, reply) => {
