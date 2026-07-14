@@ -30,6 +30,7 @@ export async function blogRoutes(fastify: FastifyInstance) {
           excerpt: true,
           coverImageUrl: true,
           publishedAt: true,
+          authorName: true,
         },
       }),
       fastify.prisma.blogPost.count({ where }),

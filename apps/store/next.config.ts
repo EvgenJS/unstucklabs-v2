@@ -13,13 +13,10 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  // HSTS/CSP are deliberately left out here -- TLS termination and
-  // subdomain routing already happen at the Nginx layer in production
-  // (deploy/nginx/snippets/security-headers.conf sets HSTS; CSP is left out
-  // there too since each app's own script/style sources differ too much for
-  // one shared policy). The three headers below duplicate what Nginx already
-  // sets in production, but they're harmless defense-in-depth and matter for
-  // `next dev`/`next start` run standalone, without Nginx in front.
+  // HSTS is deliberately left out here -- TLS termination happens at the
+  // Nginx layer in production (deploy/nginx/snippets/security-headers.conf
+  // sets it). CSP is in middleware.ts, not here -- it needs a fresh nonce
+  // per request, which next.config.ts's static headers() can't generate.
   async headers() {
     return [
       {

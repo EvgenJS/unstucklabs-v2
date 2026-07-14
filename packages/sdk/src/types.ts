@@ -48,6 +48,7 @@ export interface BlogPostSummary {
   excerpt: string;
   coverImageUrl: string | null;
   publishedAt: string | null;
+  authorName: string;
 }
 
 export interface BlogPost extends BlogPostSummary {

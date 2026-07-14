@@ -17,6 +17,7 @@ export function BlogPostForm({ initial, onSubmit, onCancel }: Props) {
   const [content, setContent] = useState(initial?.content ?? "");
   const [seoTitle, setSeoTitle] = useState(initial?.seoTitle ?? "");
   const [seoDescription, setSeoDescription] = useState(initial?.seoDescription ?? "");
+  const [authorName, setAuthorName] = useState(initial?.authorName ?? "Yevhen Spatar");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -32,6 +33,7 @@ export function BlogPostForm({ initial, onSubmit, onCancel }: Props) {
         content,
         seoTitle: seoTitle || undefined,
         seoDescription: seoDescription || undefined,
+        authorName: authorName || undefined,
       });
     } catch {
       setError("Could not save -- check the fields and try again.");
@@ -81,6 +83,10 @@ export function BlogPostForm({ initial, onSubmit, onCancel }: Props) {
           <label className="mb-1 block text-sm font-medium text-foreground">SEO description (optional)</label>
           <Input value={seoDescription} onChange={(e) => setSeoDescription(e.target.value)} />
         </div>
+      </div>
+      <div>
+        <label className="mb-1 block text-sm font-medium text-foreground">Author</label>
+        <Input required value={authorName} onChange={(e) => setAuthorName(e.target.value)} />
       </div>
       {error && (
         <p role="alert" className="text-sm text-destructive">

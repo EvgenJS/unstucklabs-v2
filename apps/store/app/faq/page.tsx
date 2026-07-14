@@ -22,14 +22,20 @@ const faqs: Faq[] = [
       "Most to-do apps assume you already know how to break a task down and just need somewhere to write it. UnstuckLabs tools are built for the moment before that — when a task is too big or vague to even start.",
   },
   {
+    // DRAFT: expanded per an SEO/GEO agent's citability pass -- review/edit
+    // before this ships, this is a suggestion, not a copy decision.
     question: "Do I have to buy every app to use one of them?",
     answer:
-      "No. Every UnstuckLabs tool is priced and sold on its own. You only pay for the one you actually need — there's no bundle or forced upgrade.",
+      "No. Every UnstuckLabs tool — Unstuck Daily, HabitFlow, FishCast, and anything we build after — is priced and sold on its own. You only pay for the one you actually need, and buying one doesn't require or discount any of the others — there's no bundle or forced upgrade.",
   },
   {
+    // DRAFT: expanded per an SEO/GEO agent's citability pass -- review/edit
+    // before this ships. No specific price named on purpose -- current
+    // pricing is provisional and will change, don't reintroduce a number
+    // here without checking with the user first.
     question: "Is this a subscription or a one-time purchase?",
     answer:
-      "It depends on the app — some are a small one-time purchase, others are a low monthly subscription. The price on each app's page always shows which.",
+      "It depends on the app — some are a small one-time purchase, others are a low monthly subscription with a cheaper annual option. The price on each app's page always shows which, and that's not a fixed rule going forward — whichever model fits the tool best.",
   },
   {
     question: "Do I need to install anything?",

@@ -70,8 +70,8 @@ export default async function BlogPostPage({ params }: Props) {
     image: [post.coverImageUrl ? resolveCoverUrl(post.coverImageUrl) : `${siteUrl}/hero-focus.jpg`],
     datePublished: post.publishedAt ?? undefined,
     // UnstuckLabs is one person, not a company (see /about) -- attribute
-    // posts to them directly rather than a generic Organization author.
-    author: { "@type": "Person", name: "Yevhen Spatar" },
+    // posts to a real Person, not a generic Organization author.
+    author: { "@type": "Person", name: post.authorName },
     publisher: {
       "@type": "Organization",
       name: "UnstuckLabs",
@@ -96,15 +96,22 @@ export default async function BlogPostPage({ params }: Props) {
         </div>
       )}
       <h1 className="text-3xl font-bold text-foreground">{post.title}</h1>
-      {post.publishedAt && (
-        <time dateTime={post.publishedAt} className="mt-2 block text-sm text-foreground/50">
-          {new Date(post.publishedAt).toLocaleDateString("en-US", {
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-          })}
-        </time>
-      )}
+      <p className="mt-2 text-sm text-foreground/50">
+        By {post.authorName}
+        {post.publishedAt && (
+          <>
+            {" "}
+            ·{" "}
+            <time dateTime={post.publishedAt}>
+              {new Date(post.publishedAt).toLocaleDateString("en-US", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })}
+            </time>
+          </>
+        )}
+      </p>
       <div className="prose prose-neutral mt-8 max-w-none prose-headings:font-bold prose-a:text-primary">
         <ReactMarkdown>{post.content}</ReactMarkdown>
       </div>

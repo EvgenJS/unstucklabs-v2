@@ -3,6 +3,7 @@ import { Plus_Jakarta_Sans } from "next/font/google";
 import { Nav } from "../components/Nav";
 import { Footer } from "../components/Footer";
 import { AuthProvider } from "../lib/auth-context";
+import { getActiveSocialLinks } from "../lib/social";
 import "./globals.css";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
@@ -35,6 +36,8 @@ export const metadata: Metadata = {
   },
 };
 
+const activeSocialLinks = getActiveSocialLinks();
+
 const organizationJsonLd = {
   "@context": "https://schema.org",
   "@graph": [
@@ -44,6 +47,9 @@ const organizationJsonLd = {
       url: siteUrl,
       logo: `${siteUrl}/icon.svg`,
       founder: { "@type": "Person", name: "Yevhen Spatar" },
+      // Empty until real profiles exist -- see lib/social.ts. Omitted
+      // entirely rather than sent as an empty array when there's nothing.
+      ...(activeSocialLinks.length > 0 && { sameAs: activeSocialLinks.map((link) => link.href) }),
     },
     {
       "@type": "WebSite",

@@ -9,6 +9,7 @@ export interface BlogPostInput {
   coverImageUrl?: string;
   seoTitle?: string;
   seoDescription?: string;
+  authorName?: string;
 }
 
 export function createBlogModule(config: ApiClientConfig) {
