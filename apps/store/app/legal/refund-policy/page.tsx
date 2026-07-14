@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Refund Policy",
+  alternates: { canonical: "/legal/refund-policy" },
 };
 
 export default function RefundPolicyPage() {

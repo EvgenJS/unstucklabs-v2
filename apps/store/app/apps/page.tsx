@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { getApiClient } from "../../lib/api";
 
@@ -18,6 +19,7 @@ const COVER_ASPECT = "aspect-[3/2]";
 export const metadata: Metadata = {
   title: "Apps",
   description: "Browse every UnstuckLabs tool — small, focused, and sold on its own.",
+  alternates: { canonical: "/apps" },
 };
 
 export default async function AppsPage() {
@@ -41,12 +43,15 @@ export default async function AppsPage() {
                 className="flex h-full flex-col overflow-hidden rounded-xl bg-white shadow-md transition-shadow duration-200 ease-out hover:shadow-lg"
               >
                 {cover && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={`${API_URL}${cover.url}`}
-                    alt={`${product.name} cover`}
-                    className={`${COVER_ASPECT} w-full object-cover`}
-                  />
+                  <div className={`relative ${COVER_ASPECT} w-full`}>
+                    <Image
+                      src={`${API_URL}${cover.url}`}
+                      alt={`${product.name} cover`}
+                      fill
+                      sizes="(max-width: 640px) 100vw, 50vw"
+                      className="object-cover"
+                    />
+                  </div>
                 )}
                 <div className="flex flex-1 flex-col p-6">
                   <h2 className="font-semibold text-foreground">{product.name}</h2>

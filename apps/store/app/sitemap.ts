@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { getAllPublishedPosts } from "../lib/blog";
+import { getApiClient } from "../lib/api";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
@@ -18,6 +19,9 @@ const staticRoutes = [
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const posts = await getAllPublishedPosts().catch(() => []);
+  const { products } = await getApiClient()
+    .products.list()
+    .catch(() => ({ products: [] }));
 
   const staticEntries: MetadataRoute.Sitemap = staticRoutes.map((path) => ({
     url: `${siteUrl}${path}`,
@@ -28,5 +32,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     lastModified: post.publishedAt ?? undefined,
   }));
 
-  return [...staticEntries, ...postEntries];
+  const productEntries: MetadataRoute.Sitemap = products
+    .filter((product) => product.isActive)
+    .map((product) => ({
+      url: `${siteUrl}/apps/${product.slug}`,
+      lastModified: product.updatedAt,
+    }));
+
+  return [...staticEntries, ...postEntries, ...productEntries];
 }

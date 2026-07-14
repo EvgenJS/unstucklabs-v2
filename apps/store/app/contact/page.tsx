@@ -5,6 +5,7 @@ import { ContactForm } from "../../components/ContactForm";
 export const metadata: Metadata = {
   title: "Contact",
   description: "Get in touch with UnstuckLabs by email or the form below.",
+  alternates: { canonical: "/contact" },
 };
 
 export default function ContactPage() {

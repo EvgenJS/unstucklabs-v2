@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Button, Card } from "@unstucklabs/ui";
 import type { Subscription } from "@unstucklabs/sdk";
@@ -71,12 +72,15 @@ export default function AccountPage() {
               <Card key={sub.id} className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
                   {cover && (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={`${API_URL}${cover.url}`}
-                      alt={`${sub.product.name} cover`}
-                      className="h-14 w-20 shrink-0 rounded-lg object-cover"
-                    />
+                    <div className="relative h-14 w-20 shrink-0 overflow-hidden rounded-lg">
+                      <Image
+                        src={`${API_URL}${cover.url}`}
+                        alt={`${sub.product.name} cover`}
+                        fill
+                        sizes="80px"
+                        className="object-cover"
+                      />
+                    </div>
                   )}
                   <div>
                     <p className="font-semibold text-foreground">{sub.product.name}</p>
