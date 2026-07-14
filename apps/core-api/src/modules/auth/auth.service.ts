@@ -3,6 +3,7 @@ import type { PrismaClient } from "@prisma/client";
 import { hashPassword, verifyPassword } from "../../lib/password.js";
 import { signAccessToken, signRefreshToken, verifyRefreshToken } from "../../lib/jwt.js";
 import { createEmailService } from "../email/email.service.js";
+import { renderEmailHtml } from "../email/email-template.js";
 
 export class EmailAlreadyRegisteredError extends Error {}
 export class InvalidCredentialsError extends Error {}
@@ -16,19 +17,29 @@ const VERIFICATION_TOKEN_HOURS = Number(process.env.EMAIL_VERIFICATION_TOKEN_HOU
 const PASSWORD_RESET_TOKEN_HOURS = Number(process.env.PASSWORD_RESET_TOKEN_HOURS ?? 1);
 
 function verificationEmailHtml(verifyUrl: string): string {
-  return `
-    <p>Welcome to UnstuckLabs — one more step.</p>
-    <p><a href="${verifyUrl}">Verify your email</a> to activate your account. This link expires in ${VERIFICATION_TOKEN_HOURS} hours.</p>
-    <p>If you didn't create this account, you can ignore this email.</p>
-  `;
+  return renderEmailHtml({
+    preheader: "One click and you're in.",
+    heading: "Welcome to UnstuckLabs",
+    bodyHtml: `
+      <p style="margin: 0 0 12px;">You're one step away from getting unstuck. Verify your email to activate your account.</p>
+      <p style="margin: 0;">This link expires in ${VERIFICATION_TOKEN_HOURS} hours. If you didn't create this account, you can safely ignore this email.</p>
+    `,
+    ctaText: "Verify your email",
+    ctaUrl: verifyUrl,
+  });
 }
 
 function passwordResetEmailHtml(resetUrl: string): string {
-  return `
-    <p>Someone requested a password reset for your UnstuckLabs account.</p>
-    <p><a href="${resetUrl}">Reset your password</a>. This link expires in ${PASSWORD_RESET_TOKEN_HOURS} hour${PASSWORD_RESET_TOKEN_HOURS === 1 ? "" : "s"}.</p>
-    <p>If you didn't request this, you can ignore this email -- your password won't change.</p>
-  `;
+  return renderEmailHtml({
+    preheader: "Reset your UnstuckLabs password.",
+    heading: "Reset your password",
+    bodyHtml: `
+      <p style="margin: 0 0 12px;">Someone requested a password reset for your UnstuckLabs account.</p>
+      <p style="margin: 0;">This link expires in ${PASSWORD_RESET_TOKEN_HOURS} hour${PASSWORD_RESET_TOKEN_HOURS === 1 ? "" : "s"}. If you didn't request this, you can ignore this email — your password won't change.</p>
+    `,
+    ctaText: "Reset your password",
+    ctaUrl: resetUrl,
+  });
 }
 
 export function createAuthService(prisma: PrismaClient) {
