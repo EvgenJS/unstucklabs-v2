@@ -2,6 +2,11 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import Link from "next/link";
 
+// Statically prerendering this page bakes in a stale CSP nonce that
+// 'strict-dynamic' rejects at request time, silently blocking every script
+// on the page. See middleware.ts and docs/ROADMAP.md's CSP notes.
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "FAQ",
   description: "Answers to common questions about UnstuckLabs apps, pricing, and how they work.",
