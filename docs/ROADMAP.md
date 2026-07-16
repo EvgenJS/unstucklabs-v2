@@ -503,6 +503,75 @@ the token can't be replayed, and a garbage/expired token cleanly shows an
   earlier. This does not block Phase 0/1/3/4 work, which can proceed against the
   stub PaymentProvider indefinitely.
 
+### Lemon Squeezy — parallel/backup PaymentProvider (added 2026-07-16)
+
+Evaluating Lemon Squeezy as a second `PaymentProvider` implementation, developed
+alongside WesternBid rather than instead of it — whichever clears onboarding
+first can go live, since the interface in
+`apps/core-api/src/modules/payments/` already exists to make this a second
+adapter, not a rework. Rationale: Lemon Squeezy is a Merchant of Record
+(processes cards via Stripe under its own account, so a Ukrainian seller
+doesn't need a personal Stripe account, which isn't available in Ukraine) and
+has no support-ticket-gated API access or "look like a live business first"
+application review the way WesternBid's Phase 2b does — it also handles
+EU VAT/sales tax remittance itself. Trade-off: Lemon Squeezy's own cut sits on
+top of Stripe's processing fee, and payout to a Ukrainian FOP needs a
+Payoneer (or similar) hop rather than a direct bank transfer.
+
+- [ ] Lemon Squeezy account created, store/products configured there
+- [ ] `LemonSqueezyProvider` implementing `createCheckoutSession` / `verifyAndParseWebhook`
+- [ ] Webhook signature verification wired up (Lemon Squeezy signs webhooks with
+      a shared secret, unlike WesternBid's still-undocumented shape)
+- [ ] Decide activation order: whichever provider (WesternBid or Lemon Squeezy)
+      finishes onboarding first becomes primary; the other stays available as
+      a fallback rather than being discarded
+
+**Application/payout research (2026-07-16)**, from Lemon Squeezy's own docs
+(docs.lemonsqueezy.com) plus a web check on current PayPal/Payoneer status
+for Ukraine:
+
+- Onboarding: free account → store starts in test mode → "Activate your
+  store" (business questionnaire + identity verification, gov-issued ID) →
+  approval typically 2-3 business days. Unlike Paddle, a rejection here is
+  explicitly **not final** per their own FAQ — resubmission is invited if
+  the underlying issue is addressed.
+- Product fit confirmed: subscription-based SaaS (exactly what the three
+  mini-apps are) is an explicitly approved category.
+- Eligibility hinges on the **payout bank account's country, not the
+  seller's citizenship** ("get paid into a bank or PayPal account located in
+  one of our hundreds of supported countries"). Checked the current list —
+  **Ukraine is not on it**.
+- PayPal payout is a dead end for a Ukraine-based seller right now: Ukrainian
+  PayPal accounts can send money but can't reliably receive/withdraw
+  business payouts as of 2026.
+- Payoneer is **not** a native Lemon Squeezy payout option — it's a
+  long-standing unshipped feature request on their public feedback board
+  (649 votes, no commitment).
+- **Workaround**: Payoneer's "Receiving Accounts" (Global Payment Service)
+  issue real local bank details (US ACH routing/account number, EUR SEPA
+  IBAN, UK sort code) via partner banks. Since Lemon Squeezy's rule is about
+  the bank account's country, not the seller's, a Payoneer USD/EUR
+  receiving-account can be entered as the Settings → Payout bank account,
+  selecting the matching country (US/Eurozone). This is legitimate (not
+  misrepresenting identity — the business questionnaire still honestly
+  states Ukraine), just a country/bank mismatch that may draw a clarifying
+  question during review, unlike Paddle's identity-level rejection.
+- Fees to plan around: platform fee ~5% + $0.50 + 1.5% (international) +
+  0.5% (subscription) ≈ ~7% + $0.50 per transaction; payout fee 1% for
+  non-US bank accounts (free for US); $50 minimum payout threshold,
+  twice-monthly schedule with a 13-day hold.
+
+**Paddle ruled out (2026-07-16)**: Paddle was also tried as a candidate MoR
+provider. Application was rejected — "This decision is final... we are unable
+to provide additional specifics or engage in further correspondence regarding
+this result" — received a few days *before* an automated "verify your
+identity to activate your account" reminder email, which is stale/queued
+noise from their drip system, not a real reopening of the application. Not
+pursuing further (no appeal channel exists per their own wording, and
+submitting government-ID/proof-of-address/video-selfie KYC to an account
+already finally rejected has no upside). Don't retry Paddle later without a
+concrete reason to believe the outcome would differ.
+
 ## Future / Backlog (not scheduled)
 
 - **AI-quiz-based app co-creation flow**: user describes what they need via a
@@ -564,6 +633,22 @@ the token can't be replayed, and a garbage/expired token cleanly shows an
 
 ## Change Log
 
+- 2026-07-16 — Added Lemon Squeezy as a parallel/backup `PaymentProvider`
+  candidate (see External Blocking Dependencies) while WesternBid's own
+  onboarding remains stuck on the merchant-profile "Confirmed" step. Not
+  implemented yet — scope addition only, per the golden-rule requirement to
+  make mid-phase scope changes a visible roadmap diff.
+- 2026-07-16 — Paddle ruled out as a payment-provider candidate: application
+  received a final rejection with no appeal channel offered, days before an
+  unrelated automated "verify your identity" reminder arrived. See the
+  "Paddle ruled out" note under External Blocking Dependencies.
+- 2026-07-16 — Researched Lemon Squeezy's actual application/payout
+  requirements (see "Application/payout research" note under External
+  Blocking Dependencies): Ukraine isn't in their supported bank-payout
+  country list and PayPal can't receive Ukraine business payouts, but a
+  Payoneer USD/EUR receiving account can stand in as the payout bank account
+  since eligibility is based on the bank account's country, not the
+  seller's.
 - 2026-07-05 — Initial roadmap drafted and committed as part of Phase 0 scaffold.
 - 2026-07-05 — Added Phase 2b (WesternBid application readiness checklist) per
   WesternBid's stated requirements: real catalog content, no empty/template

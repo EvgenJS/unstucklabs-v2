@@ -33,12 +33,6 @@ export function CheckoutButton({ productId, productSlug, priceCents, annualPrice
 
   if (loading) return null;
 
-  if (!user) {
-    return (
-      <Button onClick={() => router.push(`/login?redirect=/apps/${productSlug}`)}>Log in to get started</Button>
-    );
-  }
-
   async function handleApplyPromo() {
     if (!promoInput.trim()) return;
     setPromoStatus("checking");
@@ -112,38 +106,46 @@ export function CheckoutButton({ productId, productSlug, priceCents, annualPrice
         {billingPeriod === "ANNUAL" ? "/yr" : "/mo"}
       </p>
 
-      {appliedPromo && (
-        <p className="mb-3 text-sm text-foreground/70">
-          <span className="line-through">{formatPrice(activePriceCents, currency)}</span>{" "}
-          <span className="font-semibold text-primary">{formatPrice(appliedPromo.discountedPriceCents, currency)}</span>{" "}
-          with code {appliedPromo.code}
-        </p>
-      )}
+      {!user ? (
+        <Button onClick={() => router.push(`/login?redirect=/apps/${productSlug}`)}>Log in to get started</Button>
+      ) : (
+        <>
+          {appliedPromo && (
+            <p className="mb-3 text-sm text-foreground/70">
+              <span className="line-through">{formatPrice(activePriceCents, currency)}</span>{" "}
+              <span className="font-semibold text-primary">
+                {formatPrice(appliedPromo.discountedPriceCents, currency)}
+              </span>{" "}
+              with code {appliedPromo.code}
+            </p>
+          )}
 
-      <div className="mb-4 flex gap-2">
-        <Input
-          placeholder="Promo code"
-          value={promoInput}
-          onChange={(e) => setPromoInput(e.target.value)}
-          className="max-w-[200px]"
-        />
-        <Button type="button" variant="secondary" onClick={handleApplyPromo} disabled={promoStatus === "checking"}>
-          {promoStatus === "checking" ? "Checking…" : "Apply"}
-        </Button>
-      </div>
-      {promoError && (
-        <p role="alert" className="mb-3 text-sm text-destructive">
-          {promoError}
-        </p>
-      )}
+          <div className="mb-4 flex gap-2">
+            <Input
+              placeholder="Promo code"
+              value={promoInput}
+              onChange={(e) => setPromoInput(e.target.value)}
+              className="max-w-[200px]"
+            />
+            <Button type="button" variant="secondary" onClick={handleApplyPromo} disabled={promoStatus === "checking"}>
+              {promoStatus === "checking" ? "Checking…" : "Apply"}
+            </Button>
+          </div>
+          {promoError && (
+            <p role="alert" className="mb-3 text-sm text-destructive">
+              {promoError}
+            </p>
+          )}
 
-      <Button onClick={handleCheckout} disabled={status === "loading"}>
-        {status === "loading" ? "Redirecting…" : "Get started"}
-      </Button>
-      {status === "error" && (
-        <p role="alert" className="mt-2 text-sm text-destructive">
-          Something went wrong, please try again.
-        </p>
+          <Button onClick={handleCheckout} disabled={status === "loading"}>
+            {status === "loading" ? "Redirecting…" : "Get started"}
+          </Button>
+          {status === "error" && (
+            <p role="alert" className="mt-2 text-sm text-destructive">
+              Something went wrong, please try again.
+            </p>
+          )}
+        </>
       )}
     </div>
   );
