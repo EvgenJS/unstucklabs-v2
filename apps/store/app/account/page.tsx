@@ -90,6 +90,8 @@ export default function AccountPage() {
                 {url && sub.status === "ACTIVE" && (
                   <a
                     href={url}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="inline-flex cursor-pointer items-center justify-center rounded-lg bg-accent px-6 py-3 font-semibold text-on-primary transition duration-200 ease-out hover:-translate-y-0.5 hover:opacity-90"
                   >
                     Launch
