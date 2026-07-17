@@ -547,19 +547,46 @@ for Ukraine:
 - Payoneer is **not** a native Lemon Squeezy payout option — it's a
   long-standing unshipped feature request on their public feedback board
   (649 votes, no commitment).
-- **Workaround**: Payoneer's "Receiving Accounts" (Global Payment Service)
-  issue real local bank details (US ACH routing/account number, EUR SEPA
-  IBAN, UK sort code) via partner banks. Since Lemon Squeezy's rule is about
-  the bank account's country, not the seller's, a Payoneer USD/EUR
-  receiving-account can be entered as the Settings → Payout bank account,
-  selecting the matching country (US/Eurozone). This is legitimate (not
-  misrepresenting identity — the business questionnaire still honestly
-  states Ukraine), just a country/bank mismatch that may draw a clarifying
-  question during review, unlike Paddle's identity-level rejection.
 - Fees to plan around: platform fee ~5% + $0.50 + 1.5% (international) +
   0.5% (subscription) ≈ ~7% + $0.50 per transaction; payout fee 1% for
   non-US bank accounts (free for US); $50 minimum payout threshold,
   twice-monthly schedule with a 13-day hold.
+
+**Live account walkthrough, correcting the docs-based read above
+(2026-07-16)**: created the real account and store (`unstucklabs.lemonsqueezy.com`,
+test mode). The docs' framing — eligibility depends on the bank account's
+country, not the seller's — turned out **not to match the actual product**:
+
+- Settings → Payouts: the "Bank Account" payout method is a hard-`disabled`
+  button reading "Not available in your country", gated on the store's
+  *registered* country (Ukraine), not on which country's bank details you'd
+  enter. The Payoneer-virtual-foreign-bank-account idea above is not
+  reachable through this UI at all — there's no field to enter routing/
+  account numbers for any country.
+- PayPal is the only payout method that could actually be connected
+  (`Connect` succeeded with a real PayPal account).
+- A separate "[Action Required] Submit your tax information" step (required
+  "to avoid payout delays") fails outright with **"Unfortunately, Stripe
+  payouts are currently not available in your country"** — confirming that
+  post-acquisition, Lemon Squeezy's payout/tax-onboarding backend now runs
+  through Stripe (see the "2026 Update: Lemon Squeezy + Stripe Managed
+  Payments" post referenced earlier), and Stripe's own Ukraine restriction
+  (the same one WesternBid was chosen to route around, see CLAUDE.md)
+  bleeds directly into Lemon Squeezy for Ukrainian sellers now.
+- "Verify your identity" (flagged "Action Required" on the General tab)
+  redirects back to Settings instead of opening a form — unclear if this is
+  gated behind the tax step above, or a separate bug.
+- **Open question, emailed to Lemon Squeezy support 2026-07-16**: whether
+  PayPal payouts can proceed at all without completing the Stripe tax step,
+  since that step itself 500s/rejects for a Ukraine-registered store. No
+  reply yet.
+- **Revised assessment**: Lemon Squeezy looks considerably weaker as a
+  Ukraine-viable option than the docs suggested — this isn't a workaround-
+  able country/bank mismatch, it's a hard Stripe-backend rejection. WesternBid
+  (chosen specifically because it's built for Ukrainian merchants) remains
+  the stronger bet; keep Lemon Squeezy's PayPal-only path as a maybe pending
+  support's answer, not as a confident parallel/backup the way it was framed
+  above.
 
 **Paddle ruled out (2026-07-16)**: Paddle was also tried as a candidate MoR
 provider. Application was rejected — "This decision is final... we are unable
@@ -606,6 +633,30 @@ concrete reason to believe the outcome would differ.
   batching/coalescing spots that resolve to the same cache key before
   building it.
 
+- **Fourth mini-app candidate: AI document-to-quiz + spaced repetition** —
+  inspired by seeing `github.com/Magerko/quizli-releases` (a native Android
+  app: upload PDF/Word/TXT, AI generates a quiz, missed questions come back
+  on a spaced-repetition schedule, optional voice input + semantic checking
+  on open questions). Releases-only repo, no source published — nothing to
+  port, concept only, same as every other mini-app's "rewrite, not a port"
+  rule. Architecturally a good fit for the existing pattern: quiz/progress
+  state fits `AppUserData` JSONB same as the other three apps, generation
+  would reuse the shared `lib/openrouter.ts` plumbing, gating would reuse
+  `requireProductAccess()` and the existing trial/pricing model. Two real
+  departures from the source app to plan around before building: (1) the
+  original is fully offline including generation (native, on-device);
+  a PWA can only cache offline *review* of already-generated quizzes —
+  generation and any semantic-checking of open-answer responses need a
+  server LLM call every time, unlike HabitFlow/FishCast's on-tick-only AI
+  usage. (2) voice input via the Web Speech API is materially less
+  reliable on iOS Safari PWAs than native Android speech recognition —
+  treat as a nice-to-have, not launch-blocking. Also needs a per-user
+  generation cap before shipping (cost scales with document length/question
+  count per generation, plus a per-review call for open-answer checking —
+  closer to Unstuck Daily's per-user daily-cap shape than HabitFlow/
+  FishCast's cheap-per-tick shape). Not scheduled — revisit when picking
+  the next mini-app after FishCast.
+
 - **SEO/GEO: broaden audit scope past the 2026-07-14 Store-only pass** (see
   the "SEO / GEO (Store)" section above). Not done, not currently planned —
   revisit each when the trigger condition below is actually true:
@@ -649,6 +700,17 @@ concrete reason to believe the outcome would differ.
   Payoneer USD/EUR receiving account can stand in as the payout bank account
   since eligibility is based on the bank account's country, not the
   seller's.
+- 2026-07-16 — Corrected the above after actually walking through a real
+  Lemon Squeezy account/store (see "Live account walkthrough" note under
+  External Blocking Dependencies): the Payoneer-as-virtual-bank-account idea
+  doesn't hold up against the real product — "Bank Account" is hard-disabled
+  by the store's registered country with no field to enter any bank's
+  details, and the tax-info step required to avoid payout delays fails
+  outright with "Stripe payouts are currently not available in your
+  country," confirming Stripe's Ukraine restriction now runs through Lemon
+  Squeezy post-acquisition. Only PayPal connected successfully; whether it
+  can pay out without the blocked tax step is an open question emailed to
+  Lemon Squeezy support. WesternBid remains the stronger bet.
 - 2026-07-05 — Initial roadmap drafted and committed as part of Phase 0 scaffold.
 - 2026-07-05 — Added Phase 2b (WesternBid application readiness checklist) per
   WesternBid's stated requirements: real catalog content, no empty/template
