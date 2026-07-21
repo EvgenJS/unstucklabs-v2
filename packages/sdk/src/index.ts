@@ -21,7 +21,6 @@ import { createHabitFlowModule } from "./modules/habitflow";
 export type { HabitCoachInputHabit, HabitCoachResult, RecoveryDaySuggestion } from "./modules/habitflow";
 import { createFishCastModule } from "./modules/fishcast";
 export type { FishSpecies, WaterType, Units, ForecastInput, ForecastResult, GeocodeResult } from "./modules/fishcast";
-import { createManualPaymentsModule } from "./modules/manual-payments";
 
 export * from "./types";
 export { ApiError } from "./client";
@@ -46,7 +45,6 @@ export function createApiClient(config: ApiClientConfig) {
     unstuckDaily: createUnstuckDailyModule(config),
     habitflow: createHabitFlowModule(config),
     fishcast: createFishCastModule(config),
-    manualPayments: createManualPaymentsModule(config),
   };
 }
 
