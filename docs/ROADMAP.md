@@ -704,12 +704,39 @@ manual payment request from `/apps/unstuck-daily`, and confirmed the
 Telegram alert actually arrived (test user/request deleted afterward). Both
 notification channels are live.
 
-**Trade-off**: doesn't scale past a handful of manual subscribers and has no
-auto-renewal, but works immediately with zero new registration and no
-account-suspension risk (unlike the DeStream donation-disguise idea) since
-the invoice honestly states what it's for. Positioned as a stopgap while the
-ФОП/Ukrainian-gateway path (or a WesternBid clarification/Paddle
-reapplication) plays out, not a long-term replacement.
+**Ruled out after a real attempt (2026-07-21)**: tried actually creating and
+paying a "Request a Payment" invoice, and it doesn't hold up in practice,
+contradicting what Payoneer's own help docs implied:
+
+- **$20 minimum invoice amount** — above the $7/mo price point entirely (only
+  the $70/yr plan would even clear it, and forcing every subscriber onto
+  annual billing just to route around a payment-tool limitation isn't
+  something to design the product around).
+- **Requires the buyer's US state** on the payment form, an odd/blocking ask
+  for a non-US customer.
+- **The payer, in practice, does need to create a Payoneer account and go
+  through a lengthy onboarding** (street address, phone, state, zip code,
+  more) — directly contradicting the "payer doesn't need an account, pays by
+  card globally" claim in Payoneer's own help center that this whole
+  mechanism was built on. Ground truth from actually trying it beats the
+  marketing copy.
+
+**This entire mechanism (steps 1-6 above, the Admin page, the notification
+channels, the lazy-expiry/reminder scheduler) stays in the codebase** —
+none of it is Payoneer-specific at the code level (the `ManualPaymentRequest`
+model and flow don't hardcode Payoneer anywhere, "create the actual invoice"
+is a manual step outside the system regardless of which processor ends up
+usable), so switching the human-side invoicing tool to whatever payment
+path is chosen next (a Ukrainian gateway, once ФОП-registered) requires zero
+further code changes to this flow — only where Yevhen actually goes to
+create the invoice/payment link changes.
+
+**Where this leaves things**: WesternBid, Paddle, Lemon Squeezy, and now
+Payoneer direct invoicing have all failed for a Ukraine-based individual
+seller of a ~$7/mo digital subscription. The ФОП + Ukrainian-gateway path
+(WayForPay/LiqPay/Fondy, see above) is the only remaining candidate that
+hasn't hit a hard wall — it just requires the real-world ФОП registration
+step first.
 
 ## Future / Backlog (not scheduled)
 
@@ -796,6 +823,17 @@ reapplication) plays out, not a long-term replacement.
 
 ## Change Log
 
+- 2026-07-21 — Payoneer "Request a Payment" ruled out after an actual
+  attempt: $20 minimum invoice (above the $7/mo price point), requires the
+  buyer's US state, and the payer in practice needs their own Payoneer
+  account through a lengthy address/phone/zip onboarding -- contradicting
+  Payoneer's own help-center claim that no payer account is needed. WesternBid,
+  Paddle, Lemon Squeezy, and now Payoneer direct invoicing have all failed;
+  the ФОП + Ukrainian-gateway path is the only one left standing. The
+  `ManualPaymentRequest` flow/code stays as-is (not Payoneer-specific) --
+  only the human-side invoicing tool needs to change once a working
+  processor is found. See the "Payoneer manual invoicing" note under
+  External Blocking Dependencies.
 - 2026-07-21 — Implemented the Payoneer manual-invoicing flow: new
   `ManualPaymentRequest` model, customer-facing "Request to subscribe" flow
   replacing the automated-checkout call in `CheckoutButton`, an Admin page
