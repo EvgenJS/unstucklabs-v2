@@ -697,10 +697,12 @@ Telegram-not-configured log line (graceful no-op) and the request appear in
 Admin, fulfilled it, and confirmed the `Subscription` row came back `ACTIVE`
 with the correct `currentPeriodEnd` in the database.
 
-**Still needed before this is live**: create a Telegram bot via @BotFather
-and set `TELEGRAM_BOT_TOKEN`/`TELEGRAM_CHAT_ID` in production `.env` (Yevhen's
-own step, not done yet — without it, Telegram alerts silently no-op and only
-the email channel fires).
+**Live on production (2026-07-21)**: `@unstucklabs_bot` created, deployed
+(`prisma migrate deploy` + rebuild + `pm2 reload`), and verified end to end
+against the real site — registered a throwaway test account, submitted a
+manual payment request from `/apps/unstuck-daily`, and confirmed the
+Telegram alert actually arrived (test user/request deleted afterward). Both
+notification channels are live.
 
 **Trade-off**: doesn't scale past a handful of manual subscribers and has no
 auto-renewal, but works immediately with zero new registration and no
