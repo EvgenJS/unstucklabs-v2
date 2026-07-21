@@ -1,6 +1,7 @@
 import "dotenv/config";
 import { buildApp } from "./app.js";
 import { startPushScheduler } from "./modules/push/push.scheduler.js";
+import { startRenewalReminderScheduler } from "./modules/manual-payments/renewal-reminder.scheduler.js";
 
 const port = Number(process.env.PORT ?? 3001);
 // Defaults to all interfaces for local dev convenience. In production, set
@@ -12,6 +13,7 @@ buildApp()
   .then(async (app) => {
     await app.listen({ port, host });
     startPushScheduler(app);
+    startRenewalReminderScheduler(app);
   })
   .catch((err) => {
     console.error(err);

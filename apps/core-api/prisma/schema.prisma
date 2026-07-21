@@ -42,6 +42,12 @@ enum BillingPeriod {
   ANNUAL
 }
 
+enum ManualPaymentRequestStatus {
+  PENDING
+  FULFILLED
+  CANCELED
+}
+
 model User {
   id           String   @id @default(cuid())
   email        String   @unique
@@ -78,11 +84,12 @@ model User {
   tokenVersion Int @default(0)
 
   // Admin RBAC: absence of a Membership row means "not an admin user".
-  memberships          Membership[]
-  subscriptions        Subscription[]
-  appUserData          AppUserData[]
-  promoCodeRedemptions PromoCodeRedemption[]
-  pushSubscriptions    PushSubscription[]
+  memberships           Membership[]
+  subscriptions         Subscription[]
+  appUserData           AppUserData[]
+  promoCodeRedemptions  PromoCodeRedemption[]
+  pushSubscriptions     PushSubscription[]
+  manualPaymentRequests ManualPaymentRequest[]
 
   @@map("users")
 }
@@ -117,10 +124,11 @@ model Product {
   createdAt        DateTime     @default(now())
   updatedAt        DateTime     @updatedAt
 
-  subscriptions     Subscription[]
-  media             ProductMedia[]
-  promoCodes        PromoCode[]
-  pushSubscriptions PushSubscription[]
+  subscriptions         Subscription[]
+  media                 ProductMedia[]
+  promoCodes            PromoCode[]
+  pushSubscriptions     PushSubscription[]
+  manualPaymentRequests ManualPaymentRequest[]
 
   @@map("products")
 }
@@ -195,12 +203,42 @@ model Subscription {
   currentPeriodEnd       DateTime? // null for one-time purchases
   billingPeriod          BillingPeriod      @default(MONTHLY) // unused/ignored for ONE_TIME products
   trialEndsAt            DateTime? // only meaningful while status == TRIALING; orthogonal to currentPeriodEnd
+  // Set when the renewal-reminder scheduler has already notified this
+  // subscription's owner (and the admin) about an upcoming currentPeriodEnd
+  // -- prevents re-sending the same reminder on every scheduler tick.
+  // Cleared whenever currentPeriodEnd is pushed forward by a renewal, same
+  // pattern as PushSubscription.lastReminderSentAt.
+  renewalReminderSentAt  DateTime?
   createdAt              DateTime           @default(now())
   updatedAt              DateTime           @updatedAt
 
   @@unique([userId, productId])
   @@index([providerSubscriptionId])
   @@map("subscriptions")
+}
+
+// A "pay me manually" request from a logged-in user, created while the only
+// working payment rail is a hand-driven Payoneer "Request a Payment" invoice
+// (see docs/ROADMAP.md's "Payoneer manual invoicing" note) -- no automated
+// PaymentProvider involved. OWNER/EDITOR fulfils it by hand (creates the
+// Payoneer invoice outside this system, waits for payment, then marks this
+// FULFILLED, which activates the real Subscription row). `promoCode` is
+// stored as-received, not re-validated here -- purely informational for
+// whoever fulfils the request by hand.
+model ManualPaymentRequest {
+  id            String                     @id @default(cuid())
+  userId        String
+  user          User                       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId     String
+  product       Product                    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  billingPeriod BillingPeriod
+  promoCode     String?
+  status        ManualPaymentRequestStatus @default(PENDING)
+  createdAt     DateTime                   @default(now())
+  updatedAt     DateTime                   @updatedAt
+
+  @@index([userId, productId])
+  @@map("manual_payment_requests")
 }
 
 // Waitlist + newsletter capture. Deliberately separate from User -- most

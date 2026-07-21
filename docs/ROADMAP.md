@@ -496,35 +496,39 @@ the token can't be replayed, and a garbage/expired token cleanly shows an
 
 ## External Blocking Dependencies
 
-- **WesternBid API access**: requires opening a support ticket to obtain an API key;
-  webhook/checkout API shape is undocumented publicly. Per WesternBid's own process,
-  the ticket is filed only after the Phase 2b readiness checklist is fully checked
-  off (they review the live storefront before issuing API access) — do not file it
-  earlier. This does not block Phase 0/1/3/4 work, which can proceed against the
-  stub PaymentProvider indefinitely.
+- **WesternBid — rejected (2026-07-20)**: after finally reaching "Confirmed"
+  merchant profile status and filing the application (per the Phase 2b
+  checklist above), WesternBid declined: *"на жаль, наше торгове агентство
+  не обслуговує прийом платежів за цифровий товар цього характеру"*
+  ("unfortunately, our trading agency does not service payment acceptance
+  for digital goods of this nature") — a product-category rejection, not an
+  identity/country one like Paddle/Lemon Squeezy below. Vague enough that a
+  clarifying reply to WesternBid (asking what specifically about "digital
+  goods of this nature" — the subscription model? PWA delivery? SaaS in
+  general? — is unsupported) is still worth sending; not yet done. This does
+  not block Phase 0/1/3/4 work, which can proceed against the stub
+  PaymentProvider indefinitely.
 
-### Lemon Squeezy — parallel/backup PaymentProvider (added 2026-07-16)
+### Lemon Squeezy — ruled out (2026-07-16 to 2026-07-20)
 
-Evaluating Lemon Squeezy as a second `PaymentProvider` implementation, developed
-alongside WesternBid rather than instead of it — whichever clears onboarding
-first can go live, since the interface in
-`apps/core-api/src/modules/payments/` already exists to make this a second
-adapter, not a rework. Rationale: Lemon Squeezy is a Merchant of Record
-(processes cards via Stripe under its own account, so a Ukrainian seller
-doesn't need a personal Stripe account, which isn't available in Ukraine) and
-has no support-ticket-gated API access or "look like a live business first"
-application review the way WesternBid's Phase 2b does — it also handles
-EU VAT/sales tax remittance itself. Trade-off: Lemon Squeezy's own cut sits on
-top of Stripe's processing fee, and payout to a Ukrainian FOP needs a
-Payoneer (or similar) hop rather than a direct bank transfer.
+Was evaluated as a second `PaymentProvider` implementation, developed
+alongside WesternBid rather than instead of it — see the research trail
+below for why this looked viable on paper (Merchant of Record, no
+support-ticket-gated API access, handles EU VAT itself) before live testing
+and, finally, Lemon Squeezy support directly, closed it off entirely.
+No `LemonSqueezyProvider` was ever implemented — killed at the account/
+onboarding stage, never reached the point of writing adapter code.
 
-- [ ] Lemon Squeezy account created, store/products configured there
-- [ ] `LemonSqueezyProvider` implementing `createCheckoutSession` / `verifyAndParseWebhook`
-- [ ] Webhook signature verification wired up (Lemon Squeezy signs webhooks with
-      a shared secret, unlike WesternBid's still-undocumented shape)
-- [ ] Decide activation order: whichever provider (WesternBid or Lemon Squeezy)
-      finishes onboarding first becomes primary; the other stays available as
-      a fallback rather than being discarded
+**Final answer from Lemon Squeezy support (2026-07-20)**, replying to the
+open question below: *"Unfortunately, we are currently unable to support
+stores based in Ukraine. This means you won't be able to activate your
+store or start selling at this time even with paypal connected... We will
+make an announcement if we are able to support sellers from Ukraine in the
+future."* Confirms this is a blanket country-level block, not a fixable
+tax-onboarding glitch — matches Stripe's own well-known Ukraine restriction
+now bleeding through post-acquisition (see the live walkthrough below).
+**Lemon Squeezy is ruled out** until they announce Ukraine support; don't
+retry without a concrete reason to believe that's changed.
 
 **Application/payout research (2026-07-16)**, from Lemon Squeezy's own docs
 (docs.lemonsqueezy.com) plus a web check on current PayPal/Payoneer status
@@ -598,6 +602,112 @@ pursuing further (no appeal channel exists per their own wording, and
 submitting government-ID/proof-of-address/video-selfie KYC to an account
 already finally rejected has no upside). Don't retry Paddle later without a
 concrete reason to believe the outcome would differ.
+
+**Update (2026-07-20)**: a *different* Paddle email arrived — "we haven't
+received the identity verification details... closed your current onboarding
+application... welcome to start a new application whenever you have your
+documents ready." This contradicts the "final, no further correspondence"
+message above and reads like an unrelated automated onboarding-funnel
+closure (never got as far as ID verification, unsurprising since the
+business-level rejection made submitting docs seem pointless) rather than a
+reversal of the earlier decision. Undecided whether a fresh application is
+worth it — not yet attempted.
+
+**WesternBid rejected (2026-07-20)**: after finally reaching "Confirmed"
+merchant profile status, the application itself was declined — "unfortunately,
+our trading agency does not service payment acceptance for digital goods of
+this nature" (product-category reason, not identity/country). Vague enough
+that a clarifying reply asking what specifically is unsupported is still
+worth sending — not yet done.
+
+### Ukraine-native payment gateways (candidate, added 2026-07-20)
+
+WayForPay, LiqPay (PrivatBank), and Fondy were raised as alternatives to the
+international MoR platforms above, specifically because they're built for
+the Ukrainian market and shouldn't inherit Stripe's Ukraine restriction the
+way Lemon Squeezy did. **Precondition discovered**: all three require the
+seller to be registered as a ФОП (individual entrepreneur) or legal entity
+in Ukraine to connect — UnstuckLabs currently operates as an unregistered
+individual (see About/Legal pages), so this blocks on a real-world
+registration step, not a technical one. Unlike the three rejections above,
+this is a *solvable* precondition rather than a dead end — undecided yet
+whether to register a ФОП to unlock this path. Not yet researched: each
+gateway's specific requirements beyond entity registration, subscription/
+recurring-billing support, and whether they act as MoR (handle
+international card processing/VAT themselves) or require pairing with a
+separate acquiring bank.
+
+### Payoneer manual invoicing — working interim option (added 2026-07-20)
+
+Also considered whether Payoneer itself (already has an active account, used
+for receiving WesternBid/Lemon Squeezy-style payouts) could directly accept
+customer payments, not just receive payouts from other platforms. Researched
+two Payoneer products:
+
+- **Payoneer Checkout** (embeddable storefront checkout): not viable —
+  currently early-access only and requires a **Hong Kong legal entity** plus
+  $20k+/month sales volume.
+- **Payoneer Recurring Payments** (automatic repeat billing): **US-business
+  only** — not available to a Ukraine-based account.
+- **Payoneer "Request a Payment"** (invoice/payment-link tool, normally used
+  for freelance/B2B invoicing): **this actually works today, no new
+  registration needed.** The payer does **not** need their own Payoneer
+  account — they pay by card (Visa/Mastercard/Amex) directly on the hosted
+  link, globally. This is a real, honest payment for the actual product
+  (unlike the DeStream idea above) — just a manual one, since Payoneer has
+  no public API to create these links or notify on payment; everything below
+  is dashboard-driven by hand.
+
+**Mechanism (manual, no new `PaymentProvider` needed) — implemented
+2026-07-21**:
+1. Customer clicks "Request to subscribe" on a product page (`CheckoutButton`
+   — replaces the old automated-checkout call entirely, not just alongside
+   it) → `POST /apps/:productSlug/manual-payment-request` creates a
+   `ManualPaymentRequest` row (idempotent on resubmission) and shows "Thanks
+   for your order and your interest in our product. You'll receive an
+   invoice for payment shortly."
+2. Admin is notified immediately over **two channels** (email via
+   `CONTACT_NOTIFY_EMAIL` + Telegram via a bot, both best-effort so one
+   failing channel doesn't hide the other) — the exact "don't let a request
+   go unnoticed" gap the contact-form fix closed earlier, now applied here
+   too. New Admin page (`/manual-payment-requests`) lists every request.
+3. Yevhen manually creates a "Request a Payment" invoice in the Payoneer
+   dashboard for the right amount, tagged with the customer's account email
+   and product/billing period (still fully outside this system — Payoneer
+   has no creation API)
+4. Customer pays by card on the Payoneer-hosted link — no account needed
+5. Yevhen clicks "Mark Fulfilled" in Admin — this both marks the request
+   fulfilled **and** activates the real `Subscription` row (`ACTIVE`,
+   `provider: "payoneer-manual"`, `currentPeriodEnd` computed as one
+   month/year from the fulfilment moment), in one action rather than a
+   second manual step through the existing Subscriptions page
+6. Renewal is also manual (no recurring outside the US): `access.plugin.ts`
+   now lazily flips an `ACTIVE` subscription to `EXPIRED` once
+   `currentPeriodEnd` passes (same pattern as the existing `trialEndsAt`
+   branch), and a new in-process scheduler
+   (`renewal-reminder.scheduler.ts`, no new infra, single-process only —
+   same constraint as `push.scheduler.ts`) emails the customer **and**
+   pings the admin (email + Telegram) once, a configurable number of days
+   before `currentPeriodEnd` (`MANUAL_RENEWAL_REMINDER_DAYS_BEFORE`,
+   default 3), tracked via a new `renewalReminderSentAt` field so it never
+   repeats
+
+Verified end to end locally: submitted a request as a test user, saw the
+Telegram-not-configured log line (graceful no-op) and the request appear in
+Admin, fulfilled it, and confirmed the `Subscription` row came back `ACTIVE`
+with the correct `currentPeriodEnd` in the database.
+
+**Still needed before this is live**: create a Telegram bot via @BotFather
+and set `TELEGRAM_BOT_TOKEN`/`TELEGRAM_CHAT_ID` in production `.env` (Yevhen's
+own step, not done yet — without it, Telegram alerts silently no-op and only
+the email channel fires).
+
+**Trade-off**: doesn't scale past a handful of manual subscribers and has no
+auto-renewal, but works immediately with zero new registration and no
+account-suspension risk (unlike the DeStream donation-disguise idea) since
+the invoice honestly states what it's for. Positioned as a stopgap while the
+ФОП/Ukrainian-gateway path (or a WesternBid clarification/Paddle
+reapplication) plays out, not a long-term replacement.
 
 ## Future / Backlog (not scheduled)
 
@@ -684,6 +794,43 @@ concrete reason to believe the outcome would differ.
 
 ## Change Log
 
+- 2026-07-21 — Implemented the Payoneer manual-invoicing flow: new
+  `ManualPaymentRequest` model, customer-facing "Request to subscribe" flow
+  replacing the automated-checkout call in `CheckoutButton`, an Admin page
+  to review/fulfil requests, two-channel (email + Telegram) admin
+  notifications for new requests, and an in-process scheduler that reminds
+  both the customer and the admin before a manually-activated subscription's
+  `currentPeriodEnd` lapses. `access.plugin.ts` now lazily expires manual
+  subscriptions past their period, mirroring the existing trial-expiry
+  pattern. See the "Payoneer manual invoicing" note under External Blocking
+  Dependencies for the full mechanism. Telegram alerts need a bot token/chat
+  ID set in production before they'll actually fire.
+- 2026-07-20 — WesternBid rejected the payment-processing application
+  (product-category reason: "digital goods of this nature" unsupported) and
+  Lemon Squeezy support confirmed a blanket "unable to support stores based
+  in Ukraine" block, unrelated to the earlier tax-onboarding glitch. Also
+  received a second, contradictory Paddle email inviting a fresh
+  application (see the Paddle update note) — undecided whether worth
+  pursuing given the earlier "final" rejection. All three payment-provider
+  candidates tried so far have failed or are in doubt for a Ukraine-based
+  seller. Raised Ukraine-native gateways (WayForPay/LiqPay/Fondy) as the
+  next candidate — these require ФОП/legal-entity registration, which
+  UnstuckLabs doesn't have yet; a solvable precondition rather than a
+  rejection, unlike the three above. See External Blocking Dependencies for
+  full detail.
+- 2026-07-20 — Considered and rejected disguising subscription payments as
+  DeStream donations (DeStream's API is purely tips/donations between
+  streamers and viewers, with no product/subscription concept) — real risk
+  of transaction-laundering/chargeback exposure for misrepresenting a
+  mandatory payment as a voluntary tip, not just a technicality. Two honest
+  alternatives identified instead: (1) a genuine free-with-optional-donation
+  model (mini-apps free, payment unlocks a bonus, not core access) parked as
+  a tentative idea, not decided; (2) Payoneer's "Request a Payment" invoice
+  tool, which works today with no new registration and no account risk since
+  it honestly states what the charge is for — see the new "Payoneer manual
+  invoicing" note under External Blocking Dependencies. Payoneer's own
+  Checkout product (needs a Hong Kong entity + $20k/mo) and Recurring
+  Payments (US-only) were both ruled out first.
 - 2026-07-16 — Added Lemon Squeezy as a parallel/backup `PaymentProvider`
   candidate (see External Blocking Dependencies) while WesternBid's own
   onboarding remains stuck on the merchant-profile "Confirmed" step. Not
