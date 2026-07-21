@@ -30,8 +30,16 @@ export const productAccessPlugin = fp(async (fastify: FastifyInstance) => {
       });
 
       if (subscription) {
-        if (subscription.status === "ACTIVE") return;
-        if (subscription.status === "TRIALING") {
+        if (subscription.status === "ACTIVE") {
+          if (!subscription.currentPeriodEnd || subscription.currentPeriodEnd > new Date()) return;
+          // Manually-activated (Payoneer) period lapsed with no renewal --
+          // same lazy-flip idea as the TRIALING branch below, just keyed off
+          // currentPeriodEnd instead of trialEndsAt.
+          await fastify.prisma.subscription.update({
+            where: { id: subscription.id },
+            data: { status: "EXPIRED" },
+          });
+        } else if (subscription.status === "TRIALING") {
           if (!subscription.trialEndsAt || subscription.trialEndsAt > new Date()) return;
           // Trial lapsed -- lazily flip to EXPIRED so subsequent reads
           // (admin subscriptions list, /me/subscriptions) reflect it

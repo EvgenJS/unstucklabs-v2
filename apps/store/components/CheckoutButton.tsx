@@ -21,7 +21,7 @@ function formatPrice(priceCents: number, currency: string) {
 export function CheckoutButton({ productId, productSlug, priceCents, annualPriceCents, currency }: Props) {
   const { user, accessToken, loading } = useAuth();
   const router = useRouter();
-  const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
+  const [status, setStatus] = useState<"idle" | "loading" | "error" | "requested">("idle");
   const [billingPeriod, setBillingPeriod] = useState<"MONTHLY" | "ANNUAL">("MONTHLY");
 
   const [promoInput, setPromoInput] = useState("");
@@ -54,18 +54,15 @@ export function CheckoutButton({ productId, productSlug, priceCents, annualPrice
     }
   }
 
-  async function handleCheckout() {
+  async function handleRequestPayment() {
     setStatus("loading");
     try {
-      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? window.location.origin;
-      const { redirectUrl } = await getApiClient(accessToken ?? undefined).payments.createCheckoutSession({
-        productId,
-        successUrl: `${siteUrl}/account`,
-        cancelUrl: `${siteUrl}/apps/${productSlug}`,
-        promoCode: appliedPromo?.code,
+      await getApiClient(accessToken ?? undefined).manualPayments.request(
+        productSlug,
         billingPeriod,
-      });
-      window.location.href = redirectUrl;
+        appliedPromo?.code,
+      );
+      setStatus("requested");
     } catch {
       setStatus("error");
     }
@@ -108,6 +105,10 @@ export function CheckoutButton({ productId, productSlug, priceCents, annualPrice
 
       {!user ? (
         <Button onClick={() => router.push(`/login?redirect=/apps/${productSlug}`)}>Log in to get started</Button>
+      ) : status === "requested" ? (
+        <p className="font-medium text-primary">
+          Thanks for your order and your interest in our product. You&apos;ll receive an invoice for payment shortly.
+        </p>
       ) : (
         <>
           {appliedPromo && (
@@ -137,8 +138,8 @@ export function CheckoutButton({ productId, productSlug, priceCents, annualPrice
             </p>
           )}
 
-          <Button onClick={handleCheckout} disabled={status === "loading"}>
-            {status === "loading" ? "Redirecting…" : "Get started"}
+          <Button onClick={handleRequestPayment} disabled={status === "loading"}>
+            {status === "loading" ? "Sending…" : "Request to subscribe"}
           </Button>
           {status === "error" && (
             <p role="alert" className="mt-2 text-sm text-destructive">

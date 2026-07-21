@@ -116,3 +116,15 @@ export interface ContactMessage {
   message: string;
   createdAt: string;
 }
+
+export interface ManualPaymentRequest {
+  id: string;
+  userId: string;
+  productId: string;
+  billingPeriod: "MONTHLY" | "ANNUAL";
+  promoCode: string | null;
+  status: "PENDING" | "FULFILLED" | "CANCELED";
+  createdAt: string;
+  user?: { id: string; email: string };
+  product?: Product;
+}
