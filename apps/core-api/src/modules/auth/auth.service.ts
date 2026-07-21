@@ -66,7 +66,18 @@ export function createAuthService(prisma: PrismaClient) {
         },
       });
 
-      await sendVerificationEmail(user.email, token);
+      // Best-effort: the account is already created at this point, and
+      // resendVerification exists as a safety net -- a transient email
+      // failure (e.g. Resend rejecting the recipient) shouldn't turn an
+      // otherwise-successful registration into a 500 that the frontend can
+      // only describe as "email already registered" (RegisterForm's
+      // catch-all error message), while the account itself sits created but
+      // permanently unverified with no way to know why.
+      try {
+        await sendVerificationEmail(user.email, token);
+      } catch (err) {
+        console.error(`[auth] Failed to send verification email to ${user.email}:`, err);
+      }
 
       // Deliberately no accessToken/refreshToken -- registration no longer
       // implies a session. The caller (auth.routes.ts) skips setting the
