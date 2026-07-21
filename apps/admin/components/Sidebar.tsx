@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Package, Users, CreditCard, FileText, Lightbulb, Mail, Tag, LogOut, Receipt } from "lucide-react";
+import { Package, Users, CreditCard, FileText, Lightbulb, Mail, Tag, LogOut } from "lucide-react";
 import { useAuth } from "../lib/auth-context";
 
 const navItems = [
@@ -14,12 +14,6 @@ const navItems = [
   { href: "/promo-codes", label: "Promo Codes", icon: Tag, roles: ["OWNER", "EDITOR"] },
   { href: "/users", label: "Users", icon: Users, roles: ["OWNER", "EDITOR", "SUPPORT"] },
   { href: "/subscriptions", label: "Subscriptions", icon: CreditCard, roles: ["OWNER", "EDITOR", "SUPPORT"] },
-  {
-    href: "/manual-payment-requests",
-    label: "Manual Payment Requests",
-    icon: Receipt,
-    roles: ["OWNER", "EDITOR", "SUPPORT"],
-  },
   { href: "/blog", label: "Blog", icon: FileText, roles: ["OWNER", "EDITOR"] },
   { href: "/app-requests", label: "App Requests", icon: Lightbulb, roles: ["OWNER", "EDITOR", "SUPPORT"] },
   { href: "/contact-messages", label: "Contact Messages", icon: Mail, roles: ["OWNER", "EDITOR", "SUPPORT"] },
